@@ -8,7 +8,7 @@
 #include <sys/utsname.h>
 #include "commands.h"
 #include "main.h"
-
+#include <sys/stat.h>
 
 bool esnumero(char *s) {
     if (s[0] == 45) {
@@ -67,7 +67,7 @@ void infosis(){
     printf("%s(%s), OS: %s-%s-%s \n", equipo.nodename, equipo.machine, equipo.sysname, equipo.release,
            equipo.version);
 }
-void ayuda(char* arg){
+void ayuda(char* arg) {
     if (arg == NULL) {
         printf("'ayuda cmd' donde cmd es uno de los siguientes comandos:\n"
                "fin salir bye fecha pid autores hist comando carpeta infosis ayuda\n");
@@ -89,6 +89,23 @@ void ayuda(char* arg){
         printf("%s   Termina la ejecucion del shell\n", arg);
     } else if (strcmp(arg, "ayuda") == 0) {
         printf("ayuda [cmd]     Muestra ayuda sobre los comandos\n");
+    } else if (strcmp(arg, "create") == 0) {
+        printf("create [-f] [name]      Crea un directorio o un fichero (-f)\n");
+    } else if (strcmp(arg, "stat") == 0) {
+        printf("stat [-long][-link][-acc] name1 name2 .. lista ficheros;\n"
+               "\t-long: listado largo\n"
+               "\t-acc: acesstime\n"
+               "\t-link: si es enlace simbolico, el path contenido\n");
+    } else if (strcmp(arg, "list") == 0) {
+        printf("list [-reca] [-recb] [-hid][-long][-link][-acc] n1 n2 .. lista contenidos de directorios\n"
+               "\t-hid: incluye los ficheros ocultos\n"
+               "\t-reca: recursivo (antes)\n"
+               "\t-recb: recursivo (despues)\n"
+               "\tresto parametros como stat\n");
+    } else if (strcmp(arg, "delete") == 0) {
+        printf("delete [name1 name2 ..] Borra ficheros o directorios vacios\n");
+    } else if (strcmp(arg, "deltree") == 0) {
+        printf("deltree [name1 name2 ..] Borra ficheros o directorios no vacios recursivamente\n");
     } else { printf("%s no encontrado\n", arg); }
 }
 
@@ -125,7 +142,12 @@ void comando(char* arg, List *L, int *N, bool *T){
     }
 }
 void create(char* arg){
-
+    if(arg==NULL){
+        carpeta(arg);
+    }
+    else if(mkdir(arg,0777)!=0){
+        perror("No es posible crear el directorio\n");
+    }
 }
 void stat(char* arg){
 
