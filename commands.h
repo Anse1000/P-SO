@@ -6,20 +6,32 @@
 #define P0_SO_COMMANDS_H
 
 #include "list.h"
+struct parametros{
+    char**arg;
+    List *L;
+    int *N;
+    bool *T;
+};
+struct comando{
+    char* nombre;
+    int (*funcion)(struct parametros);
+    char* ayuda;
+};
+struct comando comandos[20];
 
-void salir(bool *t);
-void autores(char* arg);
-void pid(char* arg);
-void fecha(char* arg);
-void carpeta(char* arg);
-void infosis();
-void ayuda(char* arg);
-void hist(char* arg, List *L, int *N);
-void comando(char* arg, List *L, int *N, bool *T);
-void create(char* arg);
-void stat(char* arg);
-void list(char* arg);
-void delete(char* arg);
-void deltree(char* arg);
+int salir(struct parametros);
+int autores(struct parametros);
+int pid(struct parametros);
+int fecha(struct parametros);
+int carpeta(struct parametros);
+int infosis();
+int ayuda(struct parametros);
+int hist(struct parametros);
+int comando(struct parametros);
+int create(struct parametros);
+int stat1(struct parametros);
+int list(struct parametros);
+int delete(struct parametros);
+int deltree(struct parametros);
 
 #endif //P0_SO_COMMANDS_H

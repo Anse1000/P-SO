@@ -9,7 +9,7 @@ typedef struct node *pos;
 typedef struct {
     int commandNumber;
     char command[20];
-    char argument[20];
+    char *argument;
 } item;
 struct node {
     item datos;

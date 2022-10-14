@@ -28,29 +28,20 @@ void leerEntrada(char *linea) {
     fgets(linea, 255, stdin);
 }
 
-void procesarEntrada(bool *terminado, char **trozos, List *L, int *N) {
-    if (trozos[0] == NULL) { return; }
+int procesarEntrada(bool *terminado, char **trozos, List *L, int *N) {
+    struct parametros p;
+    if (trozos[0] == NULL) { return 0; }
     else {
-        if (strcmp(trozos[0], "salir") == 0 || strcmp(trozos[0], "fin") == 0 || strcmp(trozos[0], "bye") == 0) {
-            salir(terminado);
-        } else if (strcmp(trozos[0], "autores") == 0) {
-            autores(trozos[1]);
-        } else if (strcmp(trozos[0], "pid") == 0) {
-            pid(trozos[1]);
-        } else if (strcmp(trozos[0], "carpeta") == 0) {
-            carpeta(trozos[1]);
-        } else if (strcmp(trozos[0], "fecha") == 0) {
-            fecha(trozos[1]);
-        } else if (strcmp(trozos[0], "infosis") == 0) {
-            infosis();
-        } else if (strcmp(trozos[0], "ayuda") == 0) {
-            ayuda(trozos[1]);
-        } else if (strcmp(trozos[0], "hist") == 0) {
-            hist(trozos[1],L,N);
-        } else if (strcmp(trozos[0], "comando") == 0) {
-            comando(trozos[1],L,N,terminado);
-        } else { printf("%s no es un comando del shell\n", trozos[0]); }
-
+        p.arg=trozos;
+        p.T=terminado;
+        p.N=N;
+        p.L=L;
+        for(int i=0;comandos[i].nombre!=NULL;i++){
+            if(strcmp(comandos[i].nombre,trozos[0])==0){
+                return comandos[i].funcion(p);
+            }
+        }
+        return 0;
     }
 }
 
