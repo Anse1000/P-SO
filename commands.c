@@ -106,6 +106,10 @@ int infosis() {
 }
 
 int ayuda(struct parametros p) {
+    if(p.arg[1]==NULL){
+        printf("Seleccione un comando...\n");
+        return -1;
+    }
     for(int i=0;comandos[i].nombre!=NULL;i++){
         if(strcmp(comandos[i].nombre,p.arg[1])==0){
             printf("%s", comandos[i].ayuda);
