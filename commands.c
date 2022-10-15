@@ -10,6 +10,8 @@
 #include "main.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <pwd.h>
+#include <grp.h>
 
 struct comando comandos[20] = {{"autores", autores, "autores [-n|-l] Muestra los nombres y logins de los autores\n"},
                              {"pid",     pid,     "pid [-p]        Muestra el pid del shell o de su proceso padre\n"},
@@ -45,6 +47,45 @@ bool esnumero(char *s) {
     }
     return false;
 }
+int encontrar_archivo(char** a){
+    int i;
+    for(i=1;a[i][0]=='-';i++);
+    return i;
+}
+char LetraTF (mode_t m)
+{
+    switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
+        case S_IFSOCK: return 's'; /*socket */
+        case S_IFLNK: return 'l'; /*symbolic link*/
+        case S_IFREG: return '-'; /* fichero normal*/
+        case S_IFBLK: return 'b'; /*block device*/
+        case S_IFDIR: return 'd'; /*directorio */
+        case S_IFCHR: return 'c'; /*char device*/
+        case S_IFIFO: return 'p'; /*pipe*/
+        default: return '?'; /*desconocido, no deberia aparecer*/
+    }
+}
+char * ConvierteModo2 (mode_t m)
+{
+    static char permisos[12];
+    strcpy (permisos,"---------- ");
+
+    permisos[0]=LetraTF(m);
+    if (m&S_IRUSR) permisos[1]='r';    /*propietario*/
+    if (m&S_IWUSR) permisos[2]='w';
+    if (m&S_IXUSR) permisos[3]='x';
+    if (m&S_IRGRP) permisos[4]='r';    /*grupo*/
+    if (m&S_IWGRP) permisos[5]='w';
+    if (m&S_IXGRP) permisos[6]='x';
+    if (m&S_IROTH) permisos[7]='r';    /*resto*/
+    if (m&S_IWOTH) permisos[8]='w';
+    if (m&S_IXOTH) permisos[9]='x';
+    if (m&S_ISUID) permisos[3]='s';    /*setuid, setgid y stickybit*/
+    if (m&S_ISGID) permisos[6]='s';
+    if (m&S_ISVTX) permisos[9]='t';
+
+    return permisos;
+}
 
 int salir(struct parametros p) {
     *p.T = true;
@@ -75,7 +116,7 @@ int pid(struct parametros p) {
 int carpeta(struct parametros p) {
     char aux[80];
     if (p.arg[1] == NULL) {
-        getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio.\n");
+        getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio");puts("\n");
     } else {
         if (chdir(p.arg[1]) != 0) { printf("El directorio seleccionado no existe.\n"); }
     }
@@ -87,12 +128,12 @@ int fecha(struct parametros p) {
     struct tm tiempo = *localtime(&t);
 
     if (p.arg[1] == NULL) {
-        printf("%d:%d:%d\n", tiempo.tm_hour, tiempo.tm_min, tiempo.tm_sec);
+        printf("%d:%02d:%02d\n", tiempo.tm_hour, tiempo.tm_min, tiempo.tm_sec);
         printf("%d/%d/%d\n", tiempo.tm_mday, tiempo.tm_mon + 1, tiempo.tm_year + 1900);
     } else if (strcmp(p.arg[1], "-d") == 0) {
         printf("%d/%d/%d\n", tiempo.tm_mday, tiempo.tm_mon + 1, tiempo.tm_year + 1900);
     } else if (strcmp(p.arg[1], "-h") == 0) {
-        printf("%d:%d:%d\n", tiempo.tm_hour, tiempo.tm_min, tiempo.tm_sec);
+        printf("%d:%02d:%02d\n", tiempo.tm_hour, tiempo.tm_min, tiempo.tm_sec);
     }
     return 0;
 }
@@ -104,7 +145,7 @@ int infosis() {
            equipo.version);
     return 0;
 }
-
+//TODO: cuando no hay argumentos mostrar posibilidades y ayuda.
 int ayuda(struct parametros p) {
     if(p.arg[1]==NULL){
         printf("Seleccione un comando...\n");
@@ -158,18 +199,53 @@ int comando(struct parametros p) {
 int create(struct parametros p) {
     char aux[80];
     if (p.arg[1] == NULL) {
-        getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio.\n");
+        getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio");puts("\n");
     } else if(strcmp(p.arg[1], "-f") == 0){
         open(p.arg[2],O_CREAT,0777);
     } else{
         if(mkdir(p.arg[1], 0777) != 0) {
-            perror("No es posible crear el directorio\n");
+            perror("No es posible crear el directorio");
+            puts("\n");
         }
     }
     return 0;
 }
 
 int stat1(struct parametros p) {
+    char aux[80],aux2[20];
+    char buf[255];
+    char *buffer=buf;
+    struct stat s;
+    if(p.arg[1]==NULL){
+        getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio");puts("\n");
+        return -1;
+    }
+    int archivo = encontrar_archivo(p.arg);
+    for(int j=archivo;p.arg[j]!=NULL;j++) {
+        if (stat(p.arg[j], &s) == -1){perror("Error al obtener los datos del fichero");puts("\n");}
+        struct tm T = *localtime(&s.st_atim.tv_sec);
+        sprintf(aux, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
+        buf[0]='\0';
+        for (int i = 1; i < archivo; i++) {
+            if (strcmp(p.arg[i], "-long") == 0) {
+                buf[0]='\0';
+                sprintf(buffer,"%s %ld (%.10ld)\t%s\t%s\t%s\t",
+                        aux,s.st_nlink,s.st_ino,getpwuid(s.st_uid)->pw_name,getgrgid(s.st_gid)->gr_name,ConvierteModo2(s.st_mode));
+                break;
+            } else if (strcmp(p.arg[i], "-acc") == 0) {
+                strcat(buffer, aux);
+                continue;
+            } else if (strcmp(p.arg[i], "-link") == 0) {
+                sprintf(aux2,"%ld (%.10ld)\t",s.st_nlink,s.st_ino);
+                strcat(buffer,aux2);
+                continue;
+            } else{return -1;}
+        }
+        sprintf(aux2,"%ld  %s", s.st_size, p.arg[j]);
+        strcat(buffer,aux2);
+        puts(buffer);
+    }
+
     return 0;
 }
 

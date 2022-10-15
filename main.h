@@ -4,5 +4,5 @@
 
 #ifndef P0_SO_MAIN_H
 #define P0_SO_MAIN_H
-void * procesarEntrada(bool *terminado, char **trozos, List *L, int *N);
+int procesarEntrada(bool *terminado, char **trozos, List *L, int *N);
 #endif //P0_SO_MAIN_H

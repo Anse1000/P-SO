@@ -48,7 +48,7 @@ int procesarEntrada(bool *terminado, char **trozos, List *L, int *N) {
 int main() {
     bool terminado = false;
     char linea[255];
-    char *trozos[5];
+    char *trozos[10];
     List historial = createList();
     int Number = -1;
     while (!terminado) {
