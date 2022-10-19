@@ -6,6 +6,7 @@
 void addCommand(int N, char *C, List *L) {
     item I;
     I.commandNumber = N;
+    C[strlen(C)-1]='\0';
     strcpy(I.commands,C);
     insert(L,I);
 }
@@ -39,17 +40,18 @@ int procesarEntrada(bool *terminado, char **trozos, List *L, int *N) {
 
 int main() {
     bool terminado = false;
-    char linea[255];
+    char linea[255],*aux;
     char *trozos[10];
     List historial = createList();
     int Number = -1;
     while (!terminado) {
         imprimirPrompt();
         leerEntrada(linea);
+        aux = strdup(linea);
         TrocearCadena(linea, trozos);
         if (trozos[0] != NULL) {
             Number++;
-            addCommand(Number, linea, &historial);
+            addCommand(Number, aux, &historial);
         }
         procesarEntrada(&terminado, trozos, &historial, &Number);
     }

@@ -169,7 +169,6 @@ int infosis() {
     return 0;
 }
 
-//TODO: cuando no hay argumentos mostrar posibilidades y ayuda.
 int ayuda(struct parametros p) {
     if (p.arg[1] == NULL) {
         printf("ayuda [cmd]     Muestra ayuda sobre los comandos\n\tComandos disponibles:\n");
@@ -248,7 +247,6 @@ int create(struct parametros p) {
     } else {
         if (mkdir(p.arg[1], 0777) != 0) {
             perror("No es posible crear el directorio");
-            puts("\n");
         }
     }
     return 0;
@@ -306,6 +304,10 @@ int stat1(struct parametros p) {
         return -1;
     }
     int archivo = encontrar_archivo(p.arg);
+    if (archivo==9){
+        getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio");
+        return -1;
+    }
     opciones = opciones_stat(p.arg, archivo, opciones);
     for (int j = archivo; p.arg[j] != NULL; j++) {
         if (lstat(p.arg[j], &s) == -1) {
@@ -363,7 +365,7 @@ void imprimir_info_dir(char *archivo, unsigned int oplist, const unsigned int *o
     char aux1[100];
     d = opendir(archivo);
     if (d) {
-        printf("**********%s\n", archivo);
+        printf("**** %s ***\n", archivo);
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_name[0] == '.' && oplist != 1) { continue; }
             strcpy(aux1, archivo);
@@ -452,7 +454,7 @@ int deltree(struct parametros p) {
     }
     for(int i=1;p.arg[i]!=NULL;i++){
         borrar_rec(p.arg[1]);
-        remove(p.arg[1]);
+        if(remove(p.arg[1])==-1){perror("No es posible el borrado:");}
     }
     return 0;
 }
