@@ -17,8 +17,8 @@ struct comando{
     int (*funcion)(struct parametros);
     char* ayuda;
 };
-struct comando comandos[20];
-
+extern struct comando comandos[20];
+int TrocearCadena(char *cadena, char *trozos[]);
 int salir(struct parametros);
 int autores(struct parametros);
 int pid(struct parametros);

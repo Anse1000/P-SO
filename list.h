@@ -8,8 +8,7 @@
 typedef struct node *pos;
 typedef struct {
     int commandNumber;
-    char command[20];
-    char argument[20];
+    char commands[255];
 } item;
 struct node {
     item datos;

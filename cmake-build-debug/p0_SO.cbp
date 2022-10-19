@@ -91,9 +91,6 @@
 		<Unit filename="/mnt/c/Users/pablo/CLionProjects/P-SO/main.c">
 			<Option target="p0_SO"/>
 		</Unit>
-		<Unit filename="/mnt/c/Users/pablo/CLionProjects/P-SO/main.h">
-			<Option target="p0_SO"/>
-		</Unit>
 		<Unit filename="/mnt/c/Users/pablo/CLionProjects/P-SO/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>

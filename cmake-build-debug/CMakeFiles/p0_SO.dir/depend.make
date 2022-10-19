@@ -4,7 +4,6 @@
 CMakeFiles/p0_SO.dir/commands.c.o: ../commands.c
 CMakeFiles/p0_SO.dir/commands.c.o: ../commands.h
 CMakeFiles/p0_SO.dir/commands.c.o: ../list.h
-CMakeFiles/p0_SO.dir/commands.c.o: ../main.h
 
 CMakeFiles/p0_SO.dir/list.c.o: ../list.c
 CMakeFiles/p0_SO.dir/list.c.o: ../list.h

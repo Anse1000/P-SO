@@ -3,22 +3,14 @@
 #include "list.h"
 #include "commands.h"
 
-void addCommand(int N, char *C, char* A, List *L) {
+void addCommand(int N, char *C, List *L) {
     item I;
     I.commandNumber = N;
-    strcpy(I.command, C);
-    strcpy(I.argument,A);
-    insert(L, I);
+    strcpy(I.commands,C);
+    insert(L,I);
 }
 
-int TrocearCadena(char *cadena, char *trozos[]) {
-    int i = 1;
-    if ((trozos[0] = strtok(cadena, " \n\t")) == NULL)
-        return 0;
-    while ((trozos[i] = strtok(NULL, " \n\t")) != NULL)
-        i++;
-    return i;
-}
+
 
 void imprimirPrompt() {
     printf("->");
@@ -53,11 +45,11 @@ int main() {
     int Number = -1;
     while (!terminado) {
         imprimirPrompt();
-        Number++;
         leerEntrada(linea);
         TrocearCadena(linea, trozos);
         if (trozos[0] != NULL) {
-            addCommand(Number, trozos[0], (trozos[1] != NULL) ? trozos[1] : " ", &historial);
+            Number++;
+            addCommand(Number, linea, &historial);
         }
         procesarEntrada(&terminado, trozos, &historial, &Number);
     }
