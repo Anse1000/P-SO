@@ -64,8 +64,8 @@ int TrocearCadena(char *cadena, char *trozos[]) {
 
 int encontrar_archivo(char **a) {
     int i;
-    for (i = 1; a[i][0] == '-'; i++);
-    return i;
+    for (i = 1;a[i]!=NULL && a[i][0] == '-'; i++);
+    return a[i]==NULL?-1:i;
 }
 
 char LetraTF(mode_t m) {
@@ -201,7 +201,7 @@ int hist(struct parametros p) {
         *p.N = -1;
     } else if (esnumero(p.arg[1])) {
         pos aux = first(*p.L)->next;
-        while (aux->datos.commandNumber != abs(atoi(p.arg[1])) && aux != NULL) {
+        while (aux != NULL && aux->datos.commandNumber != abs(atoi(p.arg[1]))) {
             printf("%d->%s\n", aux->datos.commandNumber, aux->datos.commands);
             aux = next(*p.L, aux);
         }
@@ -257,7 +257,7 @@ unsigned int *opciones_stat(char **arg, int archivo, unsigned int *aux) {
     for (int i = 1; i < archivo; i++) {
         if (strcmp(arg[i], "-long") == 0) {
             aux[0] = 1;
-            break;
+            continue;
         } else if (strcmp(arg[i], "-acc") == 0) {
             aux[1] = 1;
             continue;
@@ -271,20 +271,24 @@ unsigned int *opciones_stat(char **arg, int archivo, unsigned int *aux) {
 
 char *imprimir_info_archivo(char *archivo, const unsigned int *opciones, struct stat s, char *buffer) {
     char aux[80];
+    int aux2;
     struct tm T;
     if (opciones[1] == 1) {
         T = *localtime(&s.st_atim.tv_sec);
     } else {
         T = *localtime(&s.st_mtim.tv_sec);
     }
-
     sprintf(aux, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
     if (opciones[0] == 1) {
         sprintf(buffer, "%s %ld (%.10ld)\t%s\t%s\t%s\t%ld  %s",
                 aux, s.st_nlink, s.st_ino, getpwuid(s.st_uid)->pw_name, getgrgid(s.st_gid)->gr_name,
                 ConvierteModo2(s.st_mode), s.st_size, archivo);
-        if (opciones[2] == 1 && LetraTF(s.st_mode) == 'l') {
-            sprintf(buffer, "%s -> %s ", buffer, realpath(archivo, NULL));
+        if (opciones[2] == 1&& S_ISLNK(s.st_mode)) {
+            aux2=(int)readlink(archivo,aux,80);
+            if(aux2==-1){
+                strcpy(aux,"**error al obtener el enlace");
+            }
+            sprintf(buffer, "%s -> %s ", buffer,aux);
         }
     } else {
         sprintf(buffer, "%ld  %s", s.st_size, archivo);
@@ -304,7 +308,7 @@ int stat1(struct parametros p) {
         return -1;
     }
     int archivo = encontrar_archivo(p.arg);
-    if (archivo==9){
+    if (archivo==-1){
         getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio");
         return -1;
     }
@@ -355,6 +359,7 @@ void encontrar_dir(char *archivo, char **aux, int *last) {
             }
         }
     }
+    closedir(d);
 }
 
 void imprimir_info_dir(char *archivo, unsigned int oplist, const unsigned int *opstat) {
@@ -365,7 +370,7 @@ void imprimir_info_dir(char *archivo, unsigned int oplist, const unsigned int *o
     char aux1[100];
     d = opendir(archivo);
     if (d) {
-        printf("**** %s ***\n", archivo);
+        printf("\n**** %s ***\n", archivo);
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_name[0] == '.' && oplist != 1) { continue; }
             strcpy(aux1, archivo);
@@ -376,6 +381,11 @@ void imprimir_info_dir(char *archivo, unsigned int oplist, const unsigned int *o
             }
             printf("%s", imprimir_info_archivo(dir->d_name, opstat, s, buffer));
         }
+        closedir(d);
+    }
+
+    else{
+        perror("Imposible acceder al directorio:");
     }
 }
 
@@ -390,6 +400,10 @@ int list(struct parametros p) {
         return -1;
     }
     int archivo = encontrar_archivo(p.arg);
+    if(archivo==-1){
+        getcwd(carpeta, 80) != NULL ? printf("%s\n", carpeta) : perror("Imposible obtener el directorio");
+        return -1;
+    }
     oplist = opciones_list(p.arg, archivo, oplist);
     opstat = opciones_stat(p.arg, archivo, opstat);
     for (int j = archivo; p.arg[j] != NULL; j++) {
@@ -409,6 +423,9 @@ int list(struct parametros p) {
             imprimir_info_dir(p.arg[j], oplist[2], opstat);
         }
     }
+    free(oplist);
+    free(opstat);
+    free(*aux);
     return 0;
 }
 

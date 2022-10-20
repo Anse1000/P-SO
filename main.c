@@ -55,5 +55,6 @@ int main() {
         }
         procesarEntrada(&terminado, trozos, &historial, &Number);
     }
+    deleteList(&historial);
     return 0;
 }
