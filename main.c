@@ -4,14 +4,12 @@
 #include "commands.h"
 
 void addCommand(int N, char *C, List *L) {
-    item I;
-    I.commandNumber = N;
+    item I=malloc(sizeof(struct item));
+    I->commandNumber = N;
     C[strlen(C)-1]='\0';
-    strcpy(I.commands,C);
+    strcpy(I->commands,C);
     insert(L,I);
 }
-
-
 
 void imprimirPrompt() {
     printf("->");
@@ -40,14 +38,14 @@ int procesarEntrada(bool *terminado, char **trozos, List *L, int *N) {
 
 int main() {
     bool terminado = false;
-    char linea[255],*aux;
+    char linea[255],aux[255];
     char *trozos[10];
     List historial = createList();
     int Number = -1;
     while (!terminado) {
         imprimirPrompt();
         leerEntrada(linea);
-        aux = strdup(linea);
+        strcpy(aux,linea);
         TrocearCadena(linea, trozos);
         if (trozos[0] != NULL) {
             Number++;
@@ -56,5 +54,6 @@ int main() {
         procesarEntrada(&terminado, trozos, &historial, &Number);
     }
     deleteList(&historial);
+    free(historial);
     return 0;
 }

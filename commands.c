@@ -194,15 +194,15 @@ int ayuda(struct parametros p) {
 int hist(struct parametros p) {
     if (p.arg[1] == NULL) {
         for (pos aux = first(*p.L)->next; aux != NULL; aux = next(*p.L, aux)) {
-            printf("%d->%s\n", aux->datos.commandNumber, aux->datos.commands);
+            printf("%d->%s\n",((item)aux->datos)->commandNumber, ((item)aux->datos)->commands);
         }
     } else if (strcmp(p.arg[1], "-c") == 0) {
         deleteList(p.L);
         *p.N = -1;
     } else if (esnumero(p.arg[1])) {
         pos aux = first(*p.L)->next;
-        while (aux != NULL && aux->datos.commandNumber != abs(atoi(p.arg[1]))) {
-            printf("%d->%s\n", aux->datos.commandNumber, aux->datos.commands);
+        while (aux != NULL && ((item)aux->datos)->commandNumber != abs(atoi(p.arg[1]))) {
+            printf("%d->%s\n", ((item)aux->datos)->commandNumber, ((item)aux->datos)->commands);
             aux = next(*p.L, aux);
         }
     }
@@ -220,15 +220,15 @@ int comando(struct parametros p) {
         printf("No hay elemento %s en el historico\n", p.arg[1]);
     } else {
         for (pos aux = first(*p.L)->next; aux != NULL; aux = aux->next) {
-            if (aux->datos.commandNumber == atoi(p.arg[1])) {
-                printf("Ejecutando comando %d: %s\n", aux->datos.commandNumber, aux->datos.commands);
+            if (((item)aux->datos)->commandNumber == atoi(p.arg[1])) {
+                printf("Ejecutando comando %d: %s\n", ((item)aux->datos)->commandNumber, ((item)aux->datos)->commands);
                 q.N = p.N;
                 q.L = p.L;
                 q.T = p.T;
-                TrocearCadena(aux->datos.commands, trozo);
+                TrocearCadena(((item)aux->datos)->commands, trozo);
                 q.arg = trozo;
                 for (int i = 0; comandos[i].nombre != NULL; i++) {
-                    if (strcmp(comandos[i].nombre, strtok(aux->datos.commands, " ")) == 0) {
+                    if (strcmp(comandos[i].nombre, strtok(((item)aux->datos)->commands, " ")) == 0) {
                         return comandos[i].funcion(q);
                     }
                 }
@@ -252,7 +252,7 @@ int create(struct parametros p) {
     return 0;
 }
 
-unsigned int *opciones_stat(char **arg, int archivo, unsigned int *aux) {
+void opciones_stat(char **arg, int archivo, unsigned int *aux) {
 
     for (int i = 1; i < archivo; i++) {
         if (strcmp(arg[i], "-long") == 0) {
@@ -266,10 +266,9 @@ unsigned int *opciones_stat(char **arg, int archivo, unsigned int *aux) {
             continue;
         } else { continue; }
     }
-    return aux;
 }
 
-char *imprimir_info_archivo(char *archivo, const unsigned int *opciones, struct stat s, char *buffer) {
+char *imprimir_info_archivo(char *archivo,const unsigned int *opciones, struct stat s, char *buffer) {
     char aux[80];
     int aux2;
     struct tm T;
@@ -301,7 +300,7 @@ char *imprimir_info_archivo(char *archivo, const unsigned int *opciones, struct 
 int stat1(struct parametros p) {
     char aux[80];
     char buffer[1000];
-    unsigned int *opciones = malloc(sizeof(int[3]));
+    unsigned int opciones[3] = {0,0,0};
     struct stat s;
     if (p.arg[1] == NULL) {
         getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio");
@@ -312,7 +311,7 @@ int stat1(struct parametros p) {
         getcwd(aux, 80) != NULL ? printf("%s\n", aux) : perror("Imposible obtener el directorio");
         return -1;
     }
-    opciones = opciones_stat(p.arg, archivo, opciones);
+    opciones_stat(p.arg, archivo, opciones);
     for (int j = archivo; p.arg[j] != NULL; j++) {
         if (lstat(p.arg[j], &s) == -1) {
             perror("Error al obtener los datos del fichero");
@@ -320,7 +319,7 @@ int stat1(struct parametros p) {
         }
         printf("%s", imprimir_info_archivo(p.arg[j], opciones, s, buffer));
     }
-    free(opciones);
+
     return 0;
 }
 
@@ -340,7 +339,7 @@ unsigned int *opciones_list(char **arg, int archivo, unsigned int *aux) {
     return aux;
 }
 
-void encontrar_dir(char *archivo, char **aux, int *last) {
+void encontrar_dir(char *archivo, char aux[30][100], int *last) {
     DIR *d;
     struct dirent *dir;
     struct stat s;
@@ -390,11 +389,11 @@ void imprimir_info_dir(char *archivo, unsigned int oplist, const unsigned int *o
 }
 
 int list(struct parametros p) {
-    char *aux[100];
-    for (int i = 0; i < (sizeof(aux) / sizeof(char *)); i++) aux[i] = malloc(sizeof(char *));
+    char aux[30][100];
+    //for (int i = 0; i < (sizeof(aux) / sizeof(char *)); i++) aux[i] = malloc(sizeof(char *));
     char carpeta[80];
-    unsigned int *oplist = malloc(sizeof(int[3]));
-    unsigned int *opstat = malloc(sizeof(int[3]));
+    unsigned int oplist[3] = {0,0,0};
+    unsigned int opstat[3] = {0,0,0};
     if (p.arg[1] == NULL) {
         getcwd(carpeta, 80) != NULL ? printf("%s\n", carpeta) : perror("Imposible obtener el directorio");
         return -1;
@@ -404,8 +403,8 @@ int list(struct parametros p) {
         getcwd(carpeta, 80) != NULL ? printf("%s\n", carpeta) : perror("Imposible obtener el directorio");
         return -1;
     }
-    oplist = opciones_list(p.arg, archivo, oplist);
-    opstat = opciones_stat(p.arg, archivo, opstat);
+    opciones_list(p.arg, archivo, oplist);
+    opciones_stat(p.arg, archivo, opstat);
     for (int j = archivo; p.arg[j] != NULL; j++) {
         int last = 0;
         encontrar_dir(p.arg[j], aux, &last);
@@ -423,9 +422,6 @@ int list(struct parametros p) {
             imprimir_info_dir(p.arg[j], oplist[2], opstat);
         }
     }
-    free(oplist);
-    free(opstat);
-    free(*aux);
     return 0;
 }
 

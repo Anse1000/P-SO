@@ -6,12 +6,12 @@
 #include <stdlib.h>
 
 typedef struct node *pos;
-typedef struct {
+typedef struct item{
     int commandNumber;
-    char commands[255];
-} item;
+    char commands[100];
+}*item;
 struct node {
-    item datos;
+    void* datos;
     pos next;
 };
 
@@ -19,7 +19,7 @@ typedef struct node *List;
 
 List createList();
 bool isEmptyList(List L);
-void insert(List *l, item data);
+void insert(List *l,void* data);
 pos first(List l);
 pos next(List l, pos p);
 void deleteList(List *L);

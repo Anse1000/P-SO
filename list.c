@@ -13,7 +13,7 @@ bool isEmptyList(List L) {
     else return false;
 }
 
-void insert(List *l, item data) {
+void insert(List *l, void* data) {
     pos p = *l;
     while (p->next != NULL)
         p = p->next;
@@ -26,13 +26,12 @@ pos first(List l) {
     return l;
 }
 
-pos next(List l, pos p) {
+pos next(List L, pos p) {
     return p->next;
 }
 
 void deleteList(List *L) {
     pos p;
-
     while (!isEmptyList(*L)) {
         p = *L;
         *L = (*L)->next;
