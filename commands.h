@@ -8,16 +8,17 @@
 #include "list.h"
 struct parametros{
     char**arg;
-    List *L;
+    List *H;
     int *N;
     bool *T;
+    List *M;
 };
 struct comando{
     char* nombre;
     int (*funcion)(struct parametros);
     char* ayuda;
 };
-extern struct comando comandos[20];
+extern struct comando comandos[30];
 int TrocearCadena(char *cadena, char *trozos[]);
 int salir(struct parametros);
 int autores(struct parametros);
@@ -33,5 +34,12 @@ int stat1(struct parametros);
 int list(struct parametros);
 int delete(struct parametros);
 int deltree(struct parametros);
+int allocate(struct parametros);
+int deallocate(struct parametros);
+int io(struct parametros);
+int memdump(struct parametros);
+int memory(struct parametros);
+int recurse(struct parametros);
+int memfill(struct parametros);
 
 #endif //P0_SO_COMMANDS_H

@@ -19,14 +19,15 @@ void leerEntrada(char *linea) {
     fgets(linea, 255, stdin);
 }
 
-int procesarEntrada(bool *terminado, char **trozos, List *L, int *N) {
+int procesarEntrada(bool *terminado, char **trozos, List *H, int *N, List *M) {
     struct parametros p;
     if (trozos[0] == NULL) { return 0; }
     else {
         p.arg=trozos;
         p.T=terminado;
         p.N=N;
-        p.L=L;
+        p.H=H;
+        p.M=M;
         for(int i=0;comandos[i].nombre!=NULL;i++){
             if(strcmp(comandos[i].nombre,trozos[0])==0){
                 return comandos[i].funcion(p);
@@ -41,6 +42,7 @@ int main() {
     char linea[255],aux[255];
     char *trozos[10];
     List historial = createList();
+    List memoria = createList();
     int Number = -1;
     while (!terminado) {
         imprimirPrompt();
@@ -51,9 +53,11 @@ int main() {
             Number++;
             addCommand(Number, aux, &historial);
         }
-        procesarEntrada(&terminado, trozos, &historial, &Number);
+        procesarEntrada(&terminado, trozos, &historial, &Number,&memoria);
     }
     deleteList(&historial);
+    deleteList(&memoria);
     free(historial);
+    free(memoria);
     return 0;
 }

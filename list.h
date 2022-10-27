@@ -10,6 +10,19 @@ typedef struct item{
     int commandNumber;
     char commands[100];
 }*item;
+
+enum types{malloced,shared,mapped};
+
+typedef struct block{
+    void* address;
+    unsigned int size;
+    char time[80];
+    enum types type;
+    key_t sharedkey;
+    char mapfilename[30];
+    int mapfiledesc;
+}*block;
+
 struct node {
     void* datos;
     pos next;

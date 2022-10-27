@@ -12,8 +12,12 @@
 #include <pwd.h>
 #include <grp.h>
 #include <dirent.h>
+#include <sys/shm.h>
+#include <errno.h>
+#include <sys/mman.h>
+#include <stdarg.h>
 
-struct comando comandos[20] = {{"autores", autores, "autores [-n|-l] Muestra los nombres y logins de los autores\n"},
+struct comando comandos[30] = {{"autores", autores, "autores [-n|-l] Muestra los nombres y logins de los autores\n"},
                                {"pid", pid, "pid [-p]        Muestra el pid del shell o de su proceso padre\n"},
                                {"infosis", infosis,
                                 "infosis         Muestra informacion de la maquina donde corre el shell\n"},
@@ -40,7 +44,31 @@ struct comando comandos[20] = {{"autores", autores, "autores [-n|-l] Muestra los
                                 "\tresto parametros como stat\n"},
                                {"delete", delete, "delete [name1 name2 ..] Borra ficheros o directorios vacios\n"},
                                {"deltree", deltree,
-                                "deltree [name1 name2 ..] Borra ficheros o directorios no vacios recursivamente\n"}};
+                                "deltree [name1 name2 ..] Borra ficheros o directorios no vacios recursivamente\n"},
+                               {"allocate",allocate,"allocate [-malloc|-shared|-createshared|-mmap]... Asigna un bloque de memoria\n"
+                                                    "        -malloc tam: asigna un bloque malloc de tamano tam\n"
+                                                    "        -createshared cl tam: asigna (creando) el bloque de memoria compartida de clave cl y tamano tam\n"
+                                                    "        -shared cl: asigna el bloque de memoria compartida (ya existente) de clave cl\n"
+                                                    "        -mmap fich perm: mapea el fichero fich, perm son los permisos\n"},
+                               {"deallocate",deallocate,"deallocate [-malloc|-shared|-delkey|-mmap|addr]..       Desasigna un bloque de memoria\n"
+                                                        "        -malloc tam: desasigna el bloque malloc de tamano tam\n"
+                                                        "        -shared cl: desasigna (desmapea) el bloque de memoria compartida de clave cl\n"
+                                                        "        -delkey cl: elimina del sistema (sin desmapear) la clave de memoria cl\n"
+                                                        "        -mmap fich: desmapea el fichero mapeado fich\n"
+                                                        "        addr: desasigna el bloque de memoria en la direccion addr\n"},
+                               {"i-o",io,"i-o [read|write] [-o] fiche addr cont\n"
+                                "        read fich addr cont: Lee cont bytes desde fich a addr\n"
+                                "        write [-o] fich addr cont: Escribe cont bytes desde addr a fich. -o para sobreescribir\n"
+                                "                addr es una direccion de memoria\n"},
+                               {"memdump",memdump,"memdump addr cont       Vuelca en pantallas los contenidos (cont bytes) de la posicion de memoria addr\n"},
+                               {"memory",memory,"memory [-blocks|-funcs|-vars|-all|-pmap] ..     Muestra muestra detalles de la memoria del proceso\n"
+                                                "                -blocks: los bloques de memoria asignados\n"
+                                                "                -funcs: las direcciones de las funciones\n"
+                                                "                -vars: las direcciones de las variables\n"
+                                                "                :-all: todo\n"
+                                                "                -pmap: muestra la salida del comando pmap(o similar)\n"},
+                               {"recurse",recurse,"recurse [n]     Invoca a la funcion recursiva n veces"},
+                               {"memfill",memfill,"memfill addr cont byte  Llena la memoria a partir de addr con byte"}};
 
 bool esnumero(char *s) {
     if (s[0] == 45) {
@@ -108,6 +136,61 @@ char *ConvierteModo2(mode_t m) {
     if (m & S_ISVTX) permisos[9] = 't';
 
     return permisos;
+}
+void insertMemoria(List* M,int size,void* address,enum types type,...){//sharedkey,mapfilename,mapfiledesc
+    va_list argptr;
+    va_start(argptr, type);
+    block B=malloc(sizeof(struct block));
+    time_t t = time(NULL);
+    struct tm T = *localtime(&t);
+    B->type=type;
+    B->address=address;
+    sprintf(B->time, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
+    B->size=size;
+    B->sharedkey= va_arg(argptr,int);
+    if(va_arg(argptr,char*)!=NULL){
+        strcpy(B->mapfilename, va_arg(argptr,char*));
+    }
+    B->mapfiledesc=va_arg(argptr,int);
+    insert(M,B);
+    va_end(argptr);
+}
+void * ObtenerMemoriaShmget (key_t clave, size_t tam)
+{
+    void * p;
+    int aux,id,flags=0777;
+    struct shmid_ds s;
+
+    if (tam)     /*tam distito de 0 indica crear */
+        flags=flags | IPC_CREAT | IPC_EXCL;
+    if (clave==IPC_PRIVATE)  /*no nos vale*/
+    {errno=EINVAL; return NULL;}
+    if ((id=shmget(clave, tam, flags))==-1)
+        return (NULL);
+    if ((p=shmat(id,NULL,0))==(void*) -1){
+        aux=errno;
+        if (tam)
+            shmctl(id,IPC_RMID,NULL);
+        errno=aux;
+        return (NULL);
+    }
+    shmctl (id,IPC_STAT,&s);
+    return (p);
+}
+void * MapearFichero (char * fichero, int protection,List*M)
+{
+    int df, map=MAP_PRIVATE,modo=O_RDONLY;
+    struct stat s;
+    void *p;
+
+    if (protection&PROT_WRITE)
+        modo=O_RDWR;
+    if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
+        return NULL;
+    if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
+        return NULL;
+    insertMemoria(M,(int)s.st_size,p,mapped,fichero,df);
+    return p;
 }
 
 int salir(struct parametros p) {
@@ -193,17 +276,17 @@ int ayuda(struct parametros p) {
 
 int hist(struct parametros p) {
     if (p.arg[1] == NULL) {
-        for (pos aux = first(*p.L)->next; aux != NULL; aux = next(*p.L, aux)) {
+        for (pos aux = first(*p.H)->next; aux != NULL; aux = next(*p.H, aux)) {
             printf("%d->%s\n",((item)aux->datos)->commandNumber, ((item)aux->datos)->commands);
         }
     } else if (strcmp(p.arg[1], "-c") == 0) {
-        deleteList(p.L);
+        deleteList(p.H);
         *p.N = -1;
     } else if (esnumero(p.arg[1])) {
-        pos aux = first(*p.L)->next;
+        pos aux = first(*p.H)->next;
         while (aux != NULL && ((item)aux->datos)->commandNumber != abs(atoi(p.arg[1]))) {
             printf("%d->%s\n", ((item)aux->datos)->commandNumber, ((item)aux->datos)->commands);
-            aux = next(*p.L, aux);
+            aux = next(*p.H, aux);
         }
     }
     return 0;
@@ -219,11 +302,11 @@ int comando(struct parametros p) {
     if (atoi(p.arg[1]) > *p.N) {
         printf("No hay elemento %s en el historico\n", p.arg[1]);
     } else {
-        for (pos aux = first(*p.L)->next; aux != NULL; aux = aux->next) {
+        for (pos aux = first(*p.H)->next; aux != NULL; aux = aux->next) {
             if (((item)aux->datos)->commandNumber == atoi(p.arg[1])) {
                 printf("Ejecutando comando %d: %s\n", ((item)aux->datos)->commandNumber, ((item)aux->datos)->commands);
                 q.N = p.N;
-                q.L = p.L;
+                q.H = p.H;
                 q.T = p.T;
                 TrocearCadena(((item)aux->datos)->commands, trozo);
                 q.arg = trozo;
@@ -469,5 +552,136 @@ int deltree(struct parametros p) {
         borrar_rec(p.arg[1]);
         if(remove(p.arg[1])==-1){perror("No es posible el borrado:");}
     }
+    return 0;
+}
+char *enum_str(enum types t){
+    if(t==malloced){
+        return "malloc";
+    }
+    else if(t==shared){
+        return "shared";
+    }
+    else{
+        return "mapped";
+    }
+}
+
+int allocate(struct parametros p){
+    void *aux;
+    char buffer[300],key[40];
+    if(p.arg[1]==NULL){
+        printf("***Lista de bloques asignados para el proceso %d\n",getpid());
+        for (pos i = first(*p.M)->next; i != NULL; i = next(*p.M, i)){
+                sprintf(buffer,"\t %p \t %s  %s",((block)i->datos)->address,((block)i->datos)->time,enum_str(((block)i->datos)->type));
+                if(((block)i->datos)->type==shared){
+                    snprintf(key,40," (key %d) \n",((block)i->datos)->sharedkey);
+                    strcat(buffer,key);
+                }
+                else{
+                    strcat(buffer,"\n");
+                }
+                printf("%s",buffer);
+            }
+        }
+    else if(strcmp(p.arg[1],"-malloc")==0){
+        if(p.arg[2]==NULL){
+            printf("***Lista de bloques asignados malloc para el proceso %d\n",getpid());
+            for (pos i = first(*p.M)->next; i != NULL; i = next(*p.M, i)){
+                if(((block)i->datos)->type==malloced){
+                    printf("\t %p \t %s  %s\n",((block)i->datos)->address,((block)i->datos)->time,enum_str(((block)i->datos)->type));
+                }
+            }
+        }
+        if((aux=malloc(atoi(p.arg[2])))!=NULL){
+            printf("Asignados %d bytes en %p\n",atoi(p.arg[2]),aux);
+            insertMemoria(p.M,atoi(p.arg[2]),aux,malloced);
+        }
+        else{
+            printf("No se asignan bloques de 0 bytes\n");
+        }
+    }
+    else if(strcmp(p.arg[1],"-createshared")==0){
+        if(p.arg[2]==NULL||p.arg[3]==NULL){
+            printf("***Lista de bloques asignados shared para el proceso %d\n",getpid());
+            for (pos i = first(*p.M)->next; i != NULL; i = next(*p.M, i)){
+                if(((block)i->datos)->type==shared){
+                    printf("\t %p \t %s  %s (key %d)\n",((block)i->datos)->address,((block)i->datos)->time,enum_str(((block)i->datos)->type),((block)i->datos)->sharedkey);
+                }
+            }
+        }
+        else{
+            if((aux = ObtenerMemoriaShmget(atoi(p.arg[2]),atoi(p.arg[3])))== NULL){
+                perror("Imposible asignar memoria compartida:");
+            }
+            else{
+                printf("Asignados %d bytes en %p\n",atoi(p.arg[3]),aux);
+                insertMemoria(p.M,atoi(p.arg[3]),aux,shared,((key_t)atoi(p.arg[2])));
+            }
+
+        }
+    }
+    else if(strcmp(p.arg[1],"-shared")==0){
+        if(p.arg[2]==NULL){
+            printf("***Lista de bloques asignados shared para el proceso %d\n",getpid());
+            for (pos i = first(*p.M)->next; i != NULL; i = next(*p.M, i)){
+                if(((block)i->datos)->type==shared){
+                    printf("\t %p \t %s  %s (key %d)\n",((block)i->datos)->address,((block)i->datos)->time,enum_str(((block)i->datos)->type),((block)i->datos)->sharedkey);
+                }
+            }
+        }
+        else{
+            if((aux=ObtenerMemoriaShmget(atoi(p.arg[2]),0))==NULL){
+                perror("Imposible asignar memoria compartida:");
+            }
+            else{
+                struct shmid_ds buf;
+                shmctl(atoi(p.arg[2]), IPC_STAT, &buf);
+                printf("Memoria compartida de clave %d en %p\n",atoi(p.arg[2]),aux);
+                insertMemoria(p.M,(int)buf.shm_segsz,aux,shared,atoi(p.arg[2]));
+            }
+        }
+    }
+    else if(strcmp(p.arg[1],"-mmap")==0){
+        char *perm;
+        int protection=0;
+        if(p.arg[2]==NULL||p.arg[3]==NULL){
+            printf("***Lista de bloques asignados mmap para el proceso %d\n",getpid());
+            for (pos i = first(*p.M)->next; i != NULL; i = next(*p.M, i)){
+                if(((block)i->datos)->type==mapped){
+                    printf("\t %p \t %s  %s\n",((block)i->datos)->address,((block)i->datos)->time,enum_str(((block)i->datos)->type));
+                }
+            }
+        }
+        else{
+            if(strlen(perm=p.arg[3])<4){
+                if (strchr(perm,'r')!=NULL) protection|=PROT_READ;
+                if (strchr(perm,'w')!=NULL) protection|=PROT_WRITE;
+                if (strchr(perm,'x')!=NULL) protection|=PROT_EXEC;
+            }
+            if ((aux =MapearFichero(p.arg[2],protection,p.M))==NULL)
+                perror ("Imposible mapear fichero");
+            else{
+                printf ("fichero %s mapeado en %p\n", p.arg[2], aux);
+            }
+        }
+    }
+    return 0;
+}
+int deallocate(struct parametros p){
+    return 0;
+}
+int io(struct parametros p){
+    return 0;
+}
+int memdump(struct parametros p){
+    return 0;
+}
+int memory(struct parametros p){
+    return 0;
+}
+int recurse(struct parametros p){
+    return 0;
+}
+int memfill(struct parametros p){
     return 0;
 }
