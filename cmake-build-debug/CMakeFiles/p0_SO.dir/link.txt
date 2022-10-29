@@ -1,1 +1,0 @@
-/usr/bin/cc -g   CMakeFiles/p0_SO.dir/main.c.o CMakeFiles/p0_SO.dir/list.c.o CMakeFiles/p0_SO.dir/commands.c.o  -o p0_SO 

@@ -11,11 +11,11 @@ typedef struct item{
     char commands[100];
 }*item;
 
-enum types{malloced,shared,mapped};
+enum types{malloced,shared,mapped,all};
 
 typedef struct block{
     void* address;
-    unsigned int size;
+    unsigned long size;
     char time[80];
     enum types type;
     key_t sharedkey;
@@ -36,7 +36,7 @@ void insert(List *l,void* data);
 pos first(List l);
 pos next(List l, pos p);
 void deleteList(List *L);
-
+void deleteelem(pos p, List *L);
 
 
 

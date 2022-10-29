@@ -6,6 +6,21 @@
 #define P0_SO_COMMANDS_H
 
 #include "list.h"
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <sys/utsname.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <pwd.h>
+#include <grp.h>
+#include <dirent.h>
+#include <sys/shm.h>
+#include <errno.h>
+#include <sys/mman.h>
+#include <stdarg.h>
+
 struct parametros{
     char**arg;
     List *H;

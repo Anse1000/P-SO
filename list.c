@@ -38,3 +38,29 @@ void deleteList(List *L) {
         free(p);
     }
 }
+void deleteelem(pos p,List *L){
+    pos q;
+
+    if (p == (*L)->next)
+    { // Delete first element
+        (*L)->next = (*L)->next->next;
+    }
+    else if (p->next == NULL)
+    { //Delete last element
+        for (q = *L; q->next->next != NULL; q = q->next)
+            ;
+        q->next = NULL;
+    }
+    else
+    { //Middle deletion Overwrite p with q
+        //p--> element we want to delete
+        //q-->next element
+
+        q = p->next;
+        p->datos = q->datos;
+        p->next = q->next;
+        p = q;
+    }
+
+    free(p);
+}

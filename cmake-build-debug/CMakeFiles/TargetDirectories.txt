@@ -1,3 +1,0 @@
-/mnt/c/Users/pablo/CLionProjects/P-SO/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/mnt/c/Users/pablo/CLionProjects/P-SO/cmake-build-debug/CMakeFiles/edit_cache.dir
-/mnt/c/Users/pablo/CLionProjects/P-SO/cmake-build-debug/CMakeFiles/p0_SO.dir
