@@ -82,10 +82,10 @@ void insertMemoria(List *M, unsigned long size, void *address, enum types type, 
     sprintf(B->time, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
     B->size = size;
     B->sharedkey = va_arg(argptr, int);
-    if (va_arg(argptr, char*) != NULL) {
+    if (type==mapped) {
         strcpy(B->mapfilename, va_arg(argptr, char*));
+        B->mapfiledesc = va_arg(argptr, int);
     }
-    B->mapfiledesc = va_arg(argptr, int);
     insert(M, B);
     va_end(argptr);
 }
@@ -221,7 +221,7 @@ void imprimir_info_dir(char *archivo, unsigned int oplist, const unsigned int *o
     char aux1[100];
     d = opendir(archivo);
     if (d) {
-        printf("\n**** %s ***\n", archivo);
+        printf("**** %s ***\n", archivo);
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_name[0] == '.' && oplist != 1) { continue; }
             strcpy(aux1, archivo);

@@ -360,7 +360,7 @@ int deallocate(struct parametros p) {
     } else if (strcmp(p.arg[1], "-malloc") == 0) {
         if (p.arg[2] == NULL) {
             imprimirmem(*p.M, malloced);
-        } else if ((s = strtoul(p.arg[2], NULL, 10) == 0)) {
+        } else if ((s = strtoul(p.arg[2], NULL, 10)) == 0) {
             printf("No se asignan bloques de 0 bytes\n");
         } else {
             unmalloc(s, p.M);
