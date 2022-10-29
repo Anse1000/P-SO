@@ -7,8 +7,6 @@
 #include "commands.h"
 bool esnumero(char *s);
 
-int TrocearCadena(char *cadena, char *trozos[]);
-
 int encontrar_archivo(char **a);
 
 char LetraTF(mode_t m);
