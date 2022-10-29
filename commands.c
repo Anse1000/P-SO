@@ -2,7 +2,7 @@
 // Created by pablo on 03/10/2022.
 //
 #include "commands.h"
-#include "aux-fun.c"
+#include "aux-fun.h"
 
 struct comando comandos[30] = {{"autores",    autores,    "autores [-n|-l] Muestra los nombres y logins de los autores\n"},
                                {"pid",        pid,        "pid [-p]        Muestra el pid del shell o de su proceso padre\n"},
