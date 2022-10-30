@@ -418,10 +418,56 @@ int deallocate(struct parametros p) {
 }
 
 int io(struct parametros p) {
-    return 0;
+    void *aux;
+    int o=0;
+    size_t cont=-1;
+    ssize_t n;
+    if(p.arg[1]==NULL){
+        printf("uso: e-s [read|write] ......\n");
+        return -1;
+    }
+    else if(strcmp(p.arg[1],"read")==0){
+        if (p.arg[2]==NULL || p.arg[3]==NULL){
+            printf ("faltan parametros\n");
+            return -1;
+        }
+        sscanf(p.arg[3],"%p",&aux);  /*convertimos de cadena a puntero*/
+        if (p.arg[4]!=NULL)
+            cont=(size_t) atoll(p.arg[4]);
+
+        if ((n=LeerFichero(p.arg[2],aux,cont))==-1)
+            perror ("Imposible leer fichero");
+        else
+            printf ("leidos %lld bytes de %s en %p\n",(long long) n,p.arg[2],aux);
+        return 0;
+    }
+    else if(strcmp(p.arg[1],"write")==0){
+        if (p.arg[2]==NULL){
+            printf ("faltan parametros\n");
+            return -1;
+        }
+        if(strcmp(p.arg[2],"-o")==0){
+            o=1;
+        }
+        if (p.arg[2+o]==NULL || p.arg[3+o]==NULL){
+            printf ("faltan parametros\n");
+            return -1;
+        }
+        sscanf(p.arg[3+o],"%p",&aux);  /*convertimos de cadena a puntero*/
+        if (p.arg[4+o]!=NULL)
+            cont=(size_t) atoll(p.arg[4+o]);
+
+        if ((n= EscribirFichero(p.arg[2+o],aux,cont,o))==-1)
+            perror ("Imposible escribir fichero");
+        else
+            printf ("escritos %lld bytes de %s en %p\n",(long long) n,p.arg[2+o],aux);
+        return 0;
+    }
+    return -1;
 }
 
 int memdump(struct parametros p) {
+
     return 0;
 }
 
@@ -430,7 +476,13 @@ int memory(struct parametros p) {
 }
 
 int recurse(struct parametros p) {
-    return 0;
+    if(p.arg[1]==NULL){
+        return -1;
+    }
+    else {
+        Recursiva(atoi(p.arg[1]));
+        return 0;
+    }
 }
 
 int memfill(struct parametros p) {

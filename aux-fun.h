@@ -40,4 +40,10 @@ void unmalloc(unsigned long s, List *M);
 void unshare(key_t key, List *M);
 
 void unmap(char *file, List *M);
+
+void Recursiva(int n);
+
+ssize_t LeerFichero (char *f, void *p, size_t cont);
+
+ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite);
 #endif //P0_SO_AUX_FUN_H

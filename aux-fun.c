@@ -87,6 +87,7 @@ void insertMemoria(List *M, unsigned long size, void *address, enum types type, 
         B->mapfiledesc = va_arg(argptr, int);
     }
     insert(M, B);
+    free(B);
     va_end(argptr);
 }
 
@@ -337,4 +338,53 @@ void unmap(char *file, List *M) {
         }
     }
     printf("Archivo %s no mapeado\n", file);
+}
+void Recursiva (int n)
+{
+    char automatico[2048];
+    static char estatico[2048];
+
+    printf ("parametro:%3d(%p) array %p, arr estatico %p\n",n,&n,automatico, estatico);
+
+    if (n>0)
+        Recursiva(n-1);
+}
+ssize_t LeerFichero (char *f, void *p, size_t cont)
+{
+    struct stat s;
+    ssize_t  n;
+    int df,aux;
+
+    if (stat (f,&s)==-1 || (df=open(f,O_RDONLY))==-1)
+        return -1;
+    if (cont==-1)   /* si pasamos -1 como bytes a leer lo leemos entero*/
+        cont=s.st_size;
+    if ((n=read(df,p,cont))==-1){
+        aux=errno;
+        close(df);
+        errno=aux;
+        return -1;
+    }
+    close (df);
+    return n;
+}
+ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
+{
+    ssize_t  n;
+    int df,aux, flags=O_CREAT | O_EXCL | O_WRONLY;
+
+    if (overwrite)
+        flags=O_CREAT | O_WRONLY | O_TRUNC;
+
+    if ((df=open(f,flags,0777))==-1)
+        return -1;
+
+    if ((n=write(df,p,cont))==-1){
+        aux=errno;
+        close(df);
+        errno=aux;
+        return -1;
+    }
+    close (df);
+    return n;
 }

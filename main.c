@@ -9,6 +9,7 @@ void addCommand(int N, char *C, List *L) {
     C[strlen(C)-1]='\0';
     strcpy(I->commands,C);
     insert(L,I);
+    free(I);
 }
 
 void imprimirPrompt() {
@@ -41,8 +42,8 @@ int main() {
     bool terminado = false;
     char linea[255],aux[255];
     char *trozos[10];
-    List historial = createList();
-    List memoria = createList();
+    List historial = createList(0);
+    List memoria = createList(1);
     int Number = -1;
     while (!terminado) {
         imprimirPrompt();

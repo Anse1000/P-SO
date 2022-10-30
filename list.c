@@ -1,10 +1,12 @@
 
 
+#include <string.h>
 #include "list.h"
 
-List createList() {
+List createList(int type) {
     struct node *N = malloc(sizeof(struct node));
     N->next = NULL;
+    N->type=type;
     return N;
 }
 bool isEmptyList(List L) {
@@ -15,11 +17,19 @@ bool isEmptyList(List L) {
 
 void insert(List *l, void* data) {
     pos p = *l;
+    int aux=p->type;
     while (p->next != NULL)
         p = p->next;
     p->next = malloc(sizeof(struct node));
     p->next->next = NULL;
-    p->next->datos = data;
+    if(!aux){
+        p->next->datos= malloc(sizeof(struct item));
+        memmove(p->next->datos,data, sizeof(struct item));
+    }
+    else{
+        p->next->datos= malloc(sizeof(struct block));
+        memmove(p->next->datos,data, sizeof(struct block));
+    }
 }
 
 pos first(List l) {
@@ -35,6 +45,7 @@ void deleteList(List *L) {
     while (!isEmptyList(*L)) {
         p = *L;
         *L = (*L)->next;
+        free(p->next->datos);
         free(p);
     }
 }
