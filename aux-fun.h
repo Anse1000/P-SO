@@ -23,7 +23,7 @@ void opciones_stat(char **arg, int archivo, unsigned int *aux);
 
 char *imprimir_info_archivo(char *archivo, const unsigned int *opciones, struct stat s, char *buffer);
 
-unsigned int *opciones_list(char **arg, int archivo, unsigned int *aux);
+void opciones_list(char **arg, int archivo, unsigned int *aux);
 
 void encontrar_dir(char *archivo, char aux[30][100], int *last);
 
@@ -46,4 +46,6 @@ void Recursiva(int n);
 ssize_t LeerFichero (char *f, void *p, size_t cont);
 
 ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite);
+
+void opciones_memory(char **arg,unsigned int *aux);
 #endif //P0_SO_AUX_FUN_H

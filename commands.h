@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <stdarg.h>
+#include <sys/wait.h>
 
 struct parametros{
     char**arg;

@@ -1,6 +1,7 @@
 //
 // Created by pablo on 03/10/2022.
 //
+
 #include "commands.h"
 #include "aux-fun.h"
 
@@ -482,9 +483,41 @@ int memdump(struct parametros p) {
     printf("\n");
     return 0;
 }
-
+//para memory
+int g1,g2,g3;
 int memory(struct parametros p) {
-
+    int a,b,c;
+    static int d,e,f;
+    auto int g,h,i;
+    unsigned int opciones[4]={0,0,0,0};
+    char pid[10];
+    if(p.arg[1]==NULL){
+        opciones[0]=1;
+        opciones[1]=1;
+        opciones[2]=1;
+    }
+    else{opciones_memory(p.arg,opciones);}
+    if(opciones[0]==1){
+        printf("Variables locales    \t%p ,%p ,%p\n",&a,&b,&c);
+        printf("Variables automaticas \t%p ,%p ,%p\n",&g,&h,&i);
+        printf("Variables estaticas \t%p ,%p ,%p\n",&d,&e,&f);
+        printf("Variables globales    \t%p ,%p ,%p\n",&g1,&g2,&g3);
+    }
+    if(opciones[1]==1){
+        printf("Funciones programa    \t%p ,%p ,%p\n",fecha,infosis,autores);
+        printf("Funciones libreria    \t%p ,%p ,%p\n",printf,scanf,strcmp);
+    }
+    if(opciones[2]==1){
+        imprimirmem(*p.M,all);
+    }
+    if(opciones[3]==1&&(opciones[0]==0&&opciones[1]==0&&opciones[2]==0)){
+        sprintf(pid,"%d",getpid());
+        char *args[3]={"-x",pid,NULL};
+        if(fork()==0){
+            execvp("pmap",args);
+        }
+        wait(NULL);
+    }
     return 0;
 }
 

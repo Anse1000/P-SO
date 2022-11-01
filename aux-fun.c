@@ -176,7 +176,7 @@ char *imprimir_info_archivo(char *archivo, const unsigned int *opciones, struct 
     return buffer;
 }
 
-unsigned int *opciones_list(char **arg, int archivo, unsigned int *aux) {
+void opciones_list(char **arg, int archivo, unsigned int *aux) {
     for (int i = 1; i < archivo; i++) {
         if (strcmp(arg[i], "-reca") == 0) {
             aux[0] = 1;
@@ -189,7 +189,33 @@ unsigned int *opciones_list(char **arg, int archivo, unsigned int *aux) {
             continue;
         } else { continue; }
     }
-    return aux;
+}
+void opciones_memory(char **arg,unsigned int *aux){
+    for(int i = 0;arg[i]!=NULL;i++){
+        if(strcmp(arg[i],"-all")==0){
+            aux[0]=1;
+            aux[1]=1;
+            aux[2]=1;
+            break;
+        }
+        else if(strcmp(arg[i],"-vars")==0){
+            aux[0]=1;
+            continue;
+        }
+        else if(strcmp(arg[i],"-funcs")==0){
+            aux[1]=1;
+            continue;
+        }
+        else if(strcmp(arg[i],"-blocks")==0){
+            aux[2]=1;
+            continue;
+        }
+        else if(strcmp(arg[i],"-pmap")==0){
+            aux[3]=1;
+            continue;
+        }
+        else{continue;}
+    }
 }
 
 void encontrar_dir(char *archivo, char aux[30][100], int *last) {
