@@ -55,8 +55,8 @@ struct comando comandos[30] = {{"autores",    autores,    "autores [-n|-l] Muest
                                                           "                -vars: las direcciones de las variables\n"
                                                           "                :-all: todo\n"
                                                           "                -pmap: muestra la salida del comando pmap(o similar)\n"},
-                               {"recurse",    recurse,    "recurse [n]     Invoca a la funcion recursiva n veces"},
-                               {"memfill",    memfill,    "memfill addr cont byte  Llena la memoria a partir de addr con byte"}};
+                               {"recurse",    recurse,    "recurse [n]     Invoca a la funcion recursiva n veces\n"},
+                               {"memfill",    memfill,    "memfill addr cont byte  Llena la memoria a partir de addr con byte\n"}};
 
 
 int salir(struct parametros p) {
@@ -532,5 +532,21 @@ int recurse(struct parametros p) {
 }
 
 int memfill(struct parametros p) {
+    int cont;
+    char byte;
+    char*aux;
+    if(p.arg[1]==NULL){
+        return -1;
+    }
+    if(p.arg[2]==NULL){cont=128;}
+    else{cont=atoi(p.arg[2]);}
+    if(p.arg[3]==NULL){byte=41;}
+    else{byte=atoi(p.arg[3]);}
+    sscanf(p.arg[1],"%p",&aux);
+    printf("Llenando %d bytes de memoria con el byte %c(%d) a partir de la direccion (%p)\n",cont,byte,byte,aux);
+    for(int i=0;i<cont;i++){
+        aux[i]=byte;
+    }
+
     return 0;
 }

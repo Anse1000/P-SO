@@ -39,6 +39,7 @@ int procesarEntrada(bool *terminado, char **trozos, List *H, int *N, List *M) {
 }
 
 int main() {
+    setbuf(stdout,0);//for debug
     bool terminado = false;
     char linea[255],aux[255];
     char *trozos[10];
