@@ -26,12 +26,11 @@ typedef struct block{
 struct node {
     void* datos;
     pos next;
-    int type;//0 item 1 block
 };
 
 typedef struct node *List;
 
-List createList(int type);
+List createList(int *type);
 bool isEmptyList(List L);
 void insert(List *l,void* data);
 pos first(List l);

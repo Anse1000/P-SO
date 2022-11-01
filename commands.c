@@ -467,11 +467,24 @@ int io(struct parametros p) {
 }
 
 int memdump(struct parametros p) {
-
+    int cont;
+    char* aux;
+    if(p.arg[1]==NULL){
+        return -1;
+    }
+    if(p.arg[2]==NULL) cont=25;
+    else cont=atoi(p.arg[2]);
+    sscanf(p.arg[1],"%p",&aux);
+    printf("Volcando %d bytes desde la direccion %p\n",cont,aux);
+    for(int i=0;i<cont;i++){
+        printf("%02X ",aux[i]);
+    }
+    printf("\n");
     return 0;
 }
 
 int memory(struct parametros p) {
+
     return 0;
 }
 

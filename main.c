@@ -42,8 +42,9 @@ int main() {
     bool terminado = false;
     char linea[255],aux[255];
     char *trozos[10];
-    List historial = createList(0);
-    List memoria = createList(1);
+    int h=0,m=1;
+    List historial = createList(&h);
+    List memoria = createList(&m);
     int Number = -1;
     while (!terminado) {
         imprimirPrompt();

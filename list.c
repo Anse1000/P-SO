@@ -3,10 +3,10 @@
 #include <string.h>
 #include "list.h"
 
-List createList(int type) {
+List createList(int *type) {
     struct node *N = malloc(sizeof(struct node));
     N->next = NULL;
-    N->type=type;
+    N->datos=type;
     return N;
 }
 bool isEmptyList(List L) {
@@ -17,7 +17,7 @@ bool isEmptyList(List L) {
 
 void insert(List *l, void* data) {
     pos p = *l;
-    int aux=p->type;
+    int aux=*(int*)(*l)->datos;
     while (p->next != NULL)
         p = p->next;
     p->next = malloc(sizeof(struct node));
@@ -51,15 +51,13 @@ void deleteList(List *L) {
 }
 void deleteelem(pos p,List *L){
     pos q;
-
     if (p == (*L)->next)
     {
         (*L)->next = (*L)->next->next;
     }
     else if (p->next == NULL)
     {
-        for (q = *L; q->next->next != NULL; q = q->next)
-            ;
+        for (q = *L; q->next->next != NULL; q = q->next);
         q->next = NULL;
     }
     else
