@@ -71,7 +71,8 @@ char *ConvierteModo2(mode_t m) {
     return permisos;
 }
 
-void insertMemoria(List *M, unsigned long size, void *address, enum types type, ...) {//sharedkey,mapfilename,mapfiledesc
+void
+insertMemoria(List *M, unsigned long size, void *address, enum types type, ...) {//sharedkey,mapfilename,mapfiledesc
     va_list argptr;
     va_start(argptr, type);
     block B = malloc(sizeof(struct block));
@@ -82,7 +83,7 @@ void insertMemoria(List *M, unsigned long size, void *address, enum types type, 
     sprintf(B->time, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
     B->size = size;
     B->sharedkey = va_arg(argptr, int);
-    if (type==mapped) {
+    if (type == mapped) {
         strcpy(B->mapfilename, va_arg(argptr, char*));
         B->mapfiledesc = va_arg(argptr, int);
     }
@@ -190,31 +191,27 @@ void opciones_list(char **arg, int archivo, unsigned int *aux) {
         } else { continue; }
     }
 }
-void opciones_memory(char **arg,unsigned int *aux){
-    for(int i = 0;arg[i]!=NULL;i++){
-        if(strcmp(arg[i],"-all")==0){
-            aux[0]=1;
-            aux[1]=1;
-            aux[2]=1;
+
+void opciones_memory(char **arg, unsigned int *aux) {
+    for (int i = 0; arg[i] != NULL; i++) {
+        if (strcmp(arg[i], "-all") == 0) {
+            aux[0] = 1;
+            aux[1] = 1;
+            aux[2] = 1;
             break;
-        }
-        else if(strcmp(arg[i],"-vars")==0){
-            aux[0]=1;
+        } else if (strcmp(arg[i], "-vars") == 0) {
+            aux[0] = 1;
             continue;
-        }
-        else if(strcmp(arg[i],"-funcs")==0){
-            aux[1]=1;
+        } else if (strcmp(arg[i], "-funcs") == 0) {
+            aux[1] = 1;
             continue;
-        }
-        else if(strcmp(arg[i],"-blocks")==0){
-            aux[2]=1;
+        } else if (strcmp(arg[i], "-blocks") == 0) {
+            aux[2] = 1;
             continue;
-        }
-        else if(strcmp(arg[i],"-pmap")==0){
-            aux[3]=1;
+        } else if (strcmp(arg[i], "-pmap") == 0) {
+            aux[3] = 1;
             continue;
-        }
-        else{continue;}
+        } else { continue; }
     }
 }
 
@@ -365,52 +362,52 @@ void unmap(char *file, List *M) {
     }
     printf("Archivo %s no mapeado\n", file);
 }
-void Recursiva (int n)
-{
+
+void Recursiva(int n) {
     char automatico[2048];
     static char estatico[2048];
 
-    printf ("parametro:%3d(%p) array %p, arr estatico %p\n",n,&n,automatico, estatico);
+    printf("parametro:%3d(%p) array %p, arr estatico %p\n", n, &n, automatico, estatico);
 
-    if (n>0)
-        Recursiva(n-1);
+    if (n > 0)
+        Recursiva(n - 1);
 }
-ssize_t LeerFichero (char *f, void *p, size_t cont)
-{
-    struct stat s;
-    ssize_t  n;
-    int df,aux;
 
-    if (stat (f,&s)==-1 || (df=open(f,O_RDONLY))==-1)
+ssize_t LeerFichero(char *f, void *p, size_t cont) {
+    struct stat s;
+    ssize_t n;
+    int df, aux;
+
+    if (stat(f, &s) == -1 || (df = open(f, O_RDONLY)) == -1)
         return -1;
-    if (cont==-1)   /* si pasamos -1 como bytes a leer lo leemos entero*/
-        cont=s.st_size;
-    if ((n=read(df,p,cont))==-1){
-        aux=errno;
+    if (cont == -1)   /* si pasamos -1 como bytes a leer lo leemos entero*/
+        cont = s.st_size;
+    if ((n = read(df, p, cont)) == -1) {
+        aux = errno;
         close(df);
-        errno=aux;
+        errno = aux;
         return -1;
     }
-    close (df);
+    close(df);
     return n;
 }
-ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
-{
-    ssize_t  n;
-    int df,aux, flags=O_CREAT | O_EXCL | O_WRONLY;
+
+ssize_t EscribirFichero(char *f, void *p, size_t cont, int overwrite) {
+    ssize_t n;
+    int df, aux, flags = O_CREAT | O_EXCL | O_WRONLY;
 
     if (overwrite)
-        flags=O_CREAT | O_WRONLY | O_TRUNC;
+        flags = O_CREAT | O_WRONLY | O_TRUNC;
 
-    if ((df=open(f,flags,0777))==-1)
+    if ((df = open(f, flags, 0777)) == -1)
         return -1;
 
-    if ((n=write(df,p,cont))==-1){
-        aux=errno;
+    if ((n = write(df, p, cont)) == -1) {
+        aux = errno;
         close(df);
-        errno=aux;
+        errno = aux;
         return -1;
     }
-    close (df);
+    close(df);
     return n;
 }

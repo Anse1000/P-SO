@@ -420,48 +420,46 @@ int deallocate(struct parametros p) {
 
 int io(struct parametros p) {
     void *aux;
-    int o=0;
-    size_t cont=-1;
+    int o = 0;
+    size_t cont = -1;
     ssize_t n;
-    if(p.arg[1]==NULL){
+    if (p.arg[1] == NULL) {
         printf("uso: e-s [read|write] ......\n");
         return -1;
-    }
-    else if(strcmp(p.arg[1],"read")==0){
-        if (p.arg[2]==NULL || p.arg[3]==NULL){
-            printf ("faltan parametros\n");
+    } else if (strcmp(p.arg[1], "read") == 0) {
+        if (p.arg[2] == NULL || p.arg[3] == NULL) {
+            printf("faltan parametros\n");
             return -1;
         }
-        sscanf(p.arg[3],"%p",&aux);  /*convertimos de cadena a puntero*/
-        if (p.arg[4]!=NULL)
-            cont=(size_t) atoll(p.arg[4]);
+        sscanf(p.arg[3], "%p", &aux);  /*convertimos de cadena a puntero*/
+        if (p.arg[4] != NULL)
+            cont = (size_t) atoll(p.arg[4]);
 
-        if ((n=LeerFichero(p.arg[2],aux,cont))==-1)
-            perror ("Imposible leer fichero");
+        if ((n = LeerFichero(p.arg[2], aux, cont)) == -1)
+            perror("Imposible leer fichero");
         else
-            printf ("leidos %lld bytes de %s en %p\n",(long long) n,p.arg[2],aux);
+            printf("leidos %lld bytes de %s en %p\n", (long long) n, p.arg[2], aux);
         return 0;
-    }
-    else if(strcmp(p.arg[1],"write")==0){
-        if (p.arg[2]==NULL){
-            printf ("faltan parametros\n");
+    } else if (strcmp(p.arg[1], "write") == 0) {
+        if (p.arg[2] == NULL) {
+            printf("faltan parametros\n");
             return -1;
         }
-        if(strcmp(p.arg[2],"-o")==0){
-            o=1;
+        if (strcmp(p.arg[2], "-o") == 0) {
+            o = 1;
         }
-        if (p.arg[2+o]==NULL || p.arg[3+o]==NULL){
-            printf ("faltan parametros\n");
+        if (p.arg[2 + o] == NULL || p.arg[3 + o] == NULL) {
+            printf("faltan parametros\n");
             return -1;
         }
-        sscanf(p.arg[3+o],"%p",&aux);  /*convertimos de cadena a puntero*/
-        if (p.arg[4+o]!=NULL)
-            cont=(size_t) atoll(p.arg[4+o]);
+        sscanf(p.arg[3 + o], "%p", &aux);  /*convertimos de cadena a puntero*/
+        if (p.arg[4 + o] != NULL)
+            cont = (size_t) atoll(p.arg[4 + o]);
 
-        if ((n= EscribirFichero(p.arg[2+o],aux,cont,o))==-1)
-            perror ("Imposible escribir fichero");
+        if ((n = EscribirFichero(p.arg[2 + o], aux, cont, o)) == -1)
+            perror("Imposible escribir fichero");
         else
-            printf ("escritos %lld bytes de %s en %p\n",(long long) n,p.arg[2+o],aux);
+            printf("escritos %lld bytes de %s en %p\n", (long long) n, p.arg[2 + o], aux);
         return 0;
     }
     return -1;
@@ -469,52 +467,57 @@ int io(struct parametros p) {
 
 int memdump(struct parametros p) {
     int cont;
-    char* aux;
-    if(p.arg[1]==NULL){
+    char *aux;
+    if (p.arg[1] == NULL) {
         return -1;
     }
-    if(p.arg[2]==NULL) cont=25;
-    else cont=atoi(p.arg[2]);
-    sscanf(p.arg[1],"%p",&aux);
-    printf("Volcando %d bytes desde la direccion %p\n",cont,aux);
-    for(int i=0;i<cont;i++){
-        printf("%02X ",aux[i]);
+    if (p.arg[2] == NULL) cont = 25;
+    else cont = atoi(p.arg[2]);
+    sscanf(p.arg[1], "%p", &aux);
+    printf("Volcando %d bytes desde la direccion %p\n", cont, aux);
+    for (int i = 0; i < cont; i++) {
+        printf("%c  ", aux[i] > 32 ? aux[i] : ' ');
+    }
+    printf("\n");
+    for (int i = 0; i < cont; i++) {
+        printf("%02X ", aux[i]);
     }
     printf("\n");
     return 0;
 }
+
 //para memory
-int g1,g2,g3;
+int g1, g2, g3;
+
 int memory(struct parametros p) {
-    int a,b,c;
-    static int d,e,f;
-    auto int g,h,i;
-    unsigned int opciones[4]={0,0,0,0};
+    int a, b, c;
+    static int d, e, f;
+    auto int g, h, i;
+    unsigned int opciones[4] = {0, 0, 0, 0};
     char pid[10];
-    if(p.arg[1]==NULL){
-        opciones[0]=1;
-        opciones[1]=1;
-        opciones[2]=1;
+    if (p.arg[1] == NULL) {
+        opciones[0] = 1;
+        opciones[1] = 1;
+        opciones[2] = 1;
+    } else { opciones_memory(p.arg, opciones); }
+    if (opciones[0] == 1) {
+        printf("Variables locales    \t%p ,%p ,%p\n", &a, &b, &c);
+        printf("Variables automaticas \t%p ,%p ,%p\n", &g, &h, &i);
+        printf("Variables estaticas \t%p ,%p ,%p\n", &d, &e, &f);
+        printf("Variables globales    \t%p ,%p ,%p\n", &g1, &g2, &g3);
     }
-    else{opciones_memory(p.arg,opciones);}
-    if(opciones[0]==1){
-        printf("Variables locales    \t%p ,%p ,%p\n",&a,&b,&c);
-        printf("Variables automaticas \t%p ,%p ,%p\n",&g,&h,&i);
-        printf("Variables estaticas \t%p ,%p ,%p\n",&d,&e,&f);
-        printf("Variables globales    \t%p ,%p ,%p\n",&g1,&g2,&g3);
+    if (opciones[1] == 1) {
+        printf("Funciones programa    \t%p ,%p ,%p\n", fecha, infosis, autores);
+        printf("Funciones libreria    \t%p ,%p ,%p\n", printf, scanf, strcmp);
     }
-    if(opciones[1]==1){
-        printf("Funciones programa    \t%p ,%p ,%p\n",fecha,infosis,autores);
-        printf("Funciones libreria    \t%p ,%p ,%p\n",printf,scanf,strcmp);
+    if (opciones[2] == 1) {
+        imprimirmem(*p.M, all);
     }
-    if(opciones[2]==1){
-        imprimirmem(*p.M,all);
-    }
-    if(opciones[3]==1&&(opciones[0]==0&&opciones[1]==0&&opciones[2]==0)){
-        sprintf(pid,"%d",getpid());
-        char *args[3]={"-x",pid,NULL};
-        if(fork()==0){
-            execvp("pmap",args);
+    if (opciones[3] == 1 && (opciones[0] == 0 && opciones[1] == 0 && opciones[2] == 0)) {
+        sprintf(pid, "%d", getpid());
+        char *args[3] = {"-x", pid, NULL};
+        if (fork() == 0) {
+            execvp("pmap", args);
         }
         wait(NULL);
     }
@@ -522,10 +525,9 @@ int memory(struct parametros p) {
 }
 
 int recurse(struct parametros p) {
-    if(p.arg[1]==NULL){
+    if (p.arg[1] == NULL) {
         return -1;
-    }
-    else {
+    } else {
         Recursiva(atoi(p.arg[1]));
         return 0;
     }
@@ -534,19 +536,18 @@ int recurse(struct parametros p) {
 int memfill(struct parametros p) {
     int cont;
     char byte;
-    char*aux;
-    if(p.arg[1]==NULL){
+    char *aux;
+    if (p.arg[1] == NULL) {
         return -1;
     }
-    if(p.arg[2]==NULL){cont=128;}
-    else{cont=atoi(p.arg[2]);}
-    if(p.arg[3]==NULL){byte=41;}
-    else{byte=atoi(p.arg[3]);}
-    sscanf(p.arg[1],"%p",&aux);
-    printf("Llenando %d bytes de memoria con el byte %c(%d) a partir de la direccion (%p)\n",cont,byte,byte,aux);
-    for(int i=0;i<cont;i++){
-        aux[i]=byte;
+    if (p.arg[2] == NULL) { cont = 128; }
+    else { cont = atoi(p.arg[2]); }
+    if (p.arg[3] == NULL) { byte = 41; }
+    else { byte = atoi(p.arg[3]); }
+    sscanf(p.arg[1], "%p", &aux);
+    printf("Llenando %d bytes de memoria con el byte %c(%d) a partir de la direccion (%p)\n", cont, byte, byte, aux);
+    for (int i = 0; i < cont; i++) {
+        aux[i] = byte;
     }
-
     return 0;
 }
