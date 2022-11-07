@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include "list.h"
+#include "aux-fun.h"
 
 List createList(int *type) {
     struct node *N = malloc(sizeof(struct node));
@@ -42,9 +43,25 @@ pos next(List L, pos p) {
 
 void deleteList(List *L) {
     pos p;
+    int aux =*(int*)(*L)->datos;
     while (!isEmptyList(*L)) {
         p = *L;
         *L = (*L)->next;
+        if(aux){
+            switch(((block)p->next->datos)->type){
+                case malloced:
+                    free(((block)p->next->datos)->address);
+                    break;
+                case shared:
+                    shmdt(((block) p->next->datos)->address);
+                    break;
+                case mapped:
+                    munmap(((block) p->next->datos)->address, ((block) p->next->datos)->size);
+                    break;
+                case all:
+                    break;
+            }
+        }
         free(p->next->datos);
         free(p);
     }
