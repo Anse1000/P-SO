@@ -82,9 +82,12 @@ insertMemoria(List *M, unsigned long size, void *address, enum types type, ...) 
     B->address = address;
     sprintf(B->time, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
     B->size = size;
-    B->sharedkey = va_arg(argptr, int);
+    if(type== shared){
+        B->sharedkey = va_arg(argptr, int);
+    }
     if (type == mapped) {
-        strcpy(B->mapfilename, va_arg(argptr, char*));
+        char* aux=va_arg(argptr, char*);
+        strcpy(B->mapfilename,aux);
         B->mapfiledesc = va_arg(argptr, int);
     }
     insert(M, B);

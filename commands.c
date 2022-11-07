@@ -336,10 +336,10 @@ int allocate(struct parametros p) {
     } else if (strcmp(p.arg[1], "-mmap") == 0) {
         char *perm;
         int protection = 0;
-        if (p.arg[2] == NULL || p.arg[3] == NULL) {
+        if (p.arg[2] == NULL) {
             imprimirmem(*p.M, mapped);
         } else {
-            if (strlen(perm = p.arg[3]) < 4) {
+            if ((perm=p.arg[3])!=NULL && strlen(perm)<4) {
                 if (strchr(perm, 'r') != NULL) protection |= PROT_READ;
                 if (strchr(perm, 'w') != NULL) protection |= PROT_WRITE;
                 if (strchr(perm, 'x') != NULL) protection |= PROT_EXEC;
