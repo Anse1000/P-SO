@@ -298,16 +298,19 @@ char *enum_str(enum types t) {
 }
 
 void imprimirmem(List M, enum types t) {
-    char buffer[300], key[40];
+    char buffer[800], key[40],file[70];
     printf("***Lista de bloques asignados %s para el proceso %d\n", enum_str(t), getpid());
     for (pos i = first(M)->next; i != NULL; i = next(M, i)) {
         if (t != all) {
             if (((block) i->datos)->type == t) {
-                sprintf(buffer, "\t %p \t %lu %s  %s", ((block) i->datos)->address, ((block) i->datos)->size,
+                sprintf(buffer, "\t %p \t %lu %s\t%s", ((block) i->datos)->address, ((block) i->datos)->size,
                         ((block) i->datos)->time, enum_str(((block) i->datos)->type));
                 if (((block) i->datos)->type == shared) {
                     snprintf(key, 40, " (key %d) \n", ((block) i->datos)->sharedkey);
                     strcat(buffer, key);
+                }else if(((block) i->datos)->type == mapped){
+                    snprintf(file,70," %s (file descriptor %d) \n",((block)i->datos)->mapfilename,((block)i->datos)->mapfiledesc);
+                    strcat(buffer,file);
                 } else {
                     strcat(buffer, "\n");
                 }
@@ -318,7 +321,10 @@ void imprimirmem(List M, enum types t) {
             if (((block) i->datos)->type == shared) {
                 snprintf(key, 40, " (key %d) \n", ((block) i->datos)->sharedkey);
                 strcat(buffer, key);
-            } else {
+            }else if(((block) i->datos)->type == mapped){
+                snprintf(file,70," %s (file descriptor %d) \n",((block)i->datos)->mapfilename,((block)i->datos)->mapfiledesc);
+                strcat(buffer,file);
+            }else {
                 strcat(buffer, "\n");
             }
 

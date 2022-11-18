@@ -328,9 +328,9 @@ int allocate(struct parametros p) {
                 perror("Imposible asignar memoria compartida:");
             } else {
                 struct shmid_ds buf;
-                shmctl(aux3, IPC_STAT, &buf);
+                shmctl(shmget(aux3,0,0777), IPC_STAT, &buf);
                 printf("Memoria compartida de clave %d en %p\n", aux3, aux);
-                insertMemoria(p.M, (int) buf.shm_segsz, aux, shared, aux3);
+                insertMemoria(p.M, buf.shm_segsz, aux, shared, aux3);
             }
         }
     } else if (strcmp(p.arg[1], "-mmap") == 0) {
