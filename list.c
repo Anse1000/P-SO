@@ -23,13 +23,17 @@ void insert(List *l, void* data) {
         p = p->next;
     p->next = malloc(sizeof(struct node));
     p->next->next = NULL;
-    if(!aux){
+    if(aux==0){
         p->next->datos= malloc(sizeof(struct item));
         memmove(p->next->datos,data, sizeof(struct item));
     }
-    else{
+    else if (aux==1){
         p->next->datos= malloc(sizeof(struct block));
         memmove(p->next->datos,data, sizeof(struct block));
+    }
+    else if(aux==2){
+        p->next->datos= malloc(sizeof(struct process));
+        memmove(p->next->datos,data, sizeof(struct process));
     }
 }
 

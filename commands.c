@@ -4,8 +4,9 @@
 
 #include "commands.h"
 #include "aux-fun.h"
+extern char **environ;
 
-struct comando comandos[30] = {{"autores",    autores,    "autores [-n|-l] Muestra los nombres y logins de los autores\n"},
+struct comando comandos[35] = {{"autores",    autores,    "autores [-n|-l] Muestra los nombres y logins de los autores\n"},
                                {"pid",        pid,        "pid [-p]        Muestra el pid del shell o de su proceso padre\n"},
                                {"infosis",    infosis,
                                                           "infosis         Muestra informacion de la maquina donde corre el shell\n"},
@@ -56,7 +57,22 @@ struct comando comandos[30] = {{"autores",    autores,    "autores [-n|-l] Muest
                                                           "                :-all: todo\n"
                                                           "                -pmap: muestra la salida del comando pmap(o similar)\n"},
                                {"recurse",    recurse,    "recurse [n]     Invoca a la funcion recursiva n veces\n"},
-                               {"memfill",    memfill,    "memfill addr cont byte  Llena la memoria a partir de addr con byte\n"}};
+                               {"memfill",    memfill,    "memfill addr cont byte  Llena la memoria a partir de addr con byte\n"},
+                               {"priority",   priority,   "priority [pid] [valor]  Muestra o cambia la prioridad del proceso pid a valor\n"},
+                               {"showvar",    showvar,    "showvar var1    Muestra el valor y las direcciones de la variable de entorno var\n"},
+                               {"changevar",  changevar,  "changevar [-a|-e|-p] var valor  Cambia el valor de una variable de entorno\n"
+                                                          "        -a: accede por el tercer arg de main\n"
+                                                          "        -e: accede mediante environ\n"
+                                                          "        -p: accede mediante putenv\n"},
+                               {"showenv",    showenv,    "showenv [-environ|-addr]         Muestra el entorno del proceso\n"},
+                               {"fork",       dofork,     "fork    Hace una llamada fork para crear un proceso\n"},
+                               {"execute",    execute,    "execute prog args....   Ejecuta, sin crear proceso,prog con argumentos\n"},
+                               {"listjobs",   listjobs,   "listjobs        Lista los procesos en segundo plano\n"},
+                               {"deljobs",    deljobs,    "deljobs [-term][-sig]   Elimina los procesos de la lista procesos en sp\n"
+                                                          "        -term: los terminados\n"
+                                                          "                -sig: los terminados por senal\n"},
+                               {"job",        job,        "job [-fg] pid   Muestra informacion del proceso pid\n"
+                                                          "                -fg: lo pasa a primer plano\n"}};
 
 
 int salir(struct parametros p) {
@@ -328,7 +344,7 @@ int allocate(struct parametros p) {
                 perror("Imposible asignar memoria compartida:");
             } else {
                 struct shmid_ds buf;
-                shmctl(shmget(aux3,0,0777), IPC_STAT, &buf);
+                shmctl(shmget(aux3, 0, 0777), IPC_STAT, &buf);
                 printf("Memoria compartida de clave %d en %p\n", aux3, aux);
                 insertMemoria(p.M, buf.shm_segsz, aux, shared, aux3);
             }
@@ -339,7 +355,7 @@ int allocate(struct parametros p) {
         if (p.arg[2] == NULL) {
             imprimirmem(*p.M, mapped);
         } else {
-            if ((perm=p.arg[3])!=NULL && strlen(perm)<4) {
+            if ((perm = p.arg[3]) != NULL && strlen(perm) < 4) {
                 if (strchr(perm, 'r') != NULL) protection |= PROT_READ;
                 if (strchr(perm, 'w') != NULL) protection |= PROT_WRITE;
                 if (strchr(perm, 'x') != NULL) protection |= PROT_EXEC;
@@ -549,5 +565,163 @@ int memfill(struct parametros p) {
     for (int i = 0; i < cont; i++) {
         aux[i] = byte;
     }
+    return 0;
+}
+
+int priority(struct parametros p) {
+    errno = 0;
+    int aux;
+    if (p.arg[1] == NULL) {
+        if ((aux = getpriority(PRIO_PROCESS, 0)) == -1 && errno == ESRCH) {
+            perror("Error:");
+        } else {
+            printf("Prioridad del proceso %d  %d\n", getpid(), aux);
+        }
+    } else if (p.arg[2] == NULL) {
+        if ((aux = getpriority(PRIO_PROCESS, atoi(p.arg[1]))) == -1 && errno == ESRCH) {
+            perror("Error:");
+        } else {
+            printf("Prioridad del proceso %d  %d\n", atoi(p.arg[1]), aux);
+        }
+    } else {
+        if (setpriority(PRIO_PROCESS, atoi(p.arg[1]), atoi(p.arg[2])) != 0) {
+            perror("Imposible cambiar la prioridad del proceso:");
+        }
+    }
+    return 0;
+}
+
+int showvar(struct parametros p) {
+    char aux[100];
+    char *aux2;
+    if (p.arg[1] == NULL) {
+        for (int i = 0; p.E[i] != NULL; i++) {
+            printf("%p-> main arg3[%d]=(%p) %s\n", &p.E[i], i, p.E[i], p.E[i]);
+        }
+    } else {
+        strcpy(aux, p.arg[1]);
+        strcat(aux, "=");
+        for (int i = 0; p.E[i] != NULL; i++) {
+            if (strncmp(aux, p.E[i], strlen(aux)) == 0) {
+                if ((aux2 = getenv(p.arg[1])) != NULL) {
+                    printf("Con arg3 main %s(%p) @%p\n", p.E[i], p.E[i], &p.E[i]);
+                    printf("  Con environ %s(%p) @%p\n", environ[i], environ[i], &environ[i]);
+                    printf("    Con getenv %s(%p)\n", aux2, &aux2);
+                    return 0;
+                }
+            }
+        }
+        printf("Variable no encontrada\n");
+    }
+    return -1;
+}
+
+int changevar(struct parametros p) {
+    if(p.arg[1]==NULL||p.arg[2]==NULL||p.arg[3]==NULL){
+        printf("Uso...  cambiarvar [-a|-e|-p] var valor\n");
+    }
+    else{
+        char* aux=malloc(strlen(p.arg[2])+strlen(p.arg[3])+2);
+        strcpy(aux, p.arg[2]);
+        strcat(aux, "=");
+        if(strcmp("-a",p.arg[1])==0){
+            for(int i=0;p.E[i]!=NULL;i++){
+                if(strncmp(aux,p.E[i],strlen(aux))==0){
+                    strcat(aux,p.arg[3]);
+                    p.E[i]=aux;
+                    return 0;
+                }
+            }
+        }
+        else if(strcmp("-e",p.arg[1])==0){
+            for(int i=0;p.E[i]!=NULL;i++){
+                if(strncmp(aux,p.E[i],strlen(aux))==0){
+                    strcat(aux,p.arg[3]);
+                    environ[i]=aux;
+                    return 0;
+                }
+            }
+        }
+        else if(strcmp("-p",p.arg[1])==0){
+            strcat(aux,p.arg[3]);
+            if(putenv(aux)!=0){
+                perror("Error:");
+            }
+            return 0;
+        }
+        else{
+            printf("Uso...  cambiarvar [-a|-e|-p] var valor\n");
+            return -1;
+        }
+        printf("Variable no encontrada\n");
+    }
+    return -1;
+}
+
+int showenv(struct parametros p) {
+    if(p.arg[1]==NULL){
+        for (int i = 0; p.E[i] != NULL; i++) {
+            printf("%p-> main arg3[%d]=(%p) %s\n", &p.E[i], i, p.E[i], p.E[i]);
+        }
+    }
+    else if(strcmp(p.arg[1],"-environ")==0){
+        for (int i = 0; environ[i] != NULL; i++) {
+            printf("%p-> environ[%d]=(%p) %s\n", &environ[i], i, environ[i], environ[i]);
+        }
+    }
+    else if(strcmp(p.arg[1],"-addr")==0){
+        printf("main arg3:\n");
+        printf("environ:\n");
+    }
+    else{
+        printf("Uso... showenv [-environ|-address]\n");
+    }
+    return 0;
+}
+
+int dofork() {
+    int pid;
+    if((pid=fork())==0){
+        printf ("ejecutando proceso %d\n", getpid());
+    }
+    else if(pid==-1){
+        perror("Imposible crear proeso:");
+    }
+    else{
+        waitpid(pid,NULL,0);
+    }
+    return 0;
+}
+
+int execute(struct parametros p) {
+    char *args[10];
+    if(p.arg[1]==NULL){
+        printf("Seleccione un archivo...\n");
+    }
+    else{
+        for(int i=1;p.arg[i]!=NULL;i++){
+            args[i-1]=p.arg[i];
+        }
+        execution(args);
+    }
+    return 0;
+}
+
+int listjobs(struct parametros p) {
+    /*char buffer[800];
+    for (pos i = first(*p.M)->next; i != NULL; i = next(*p.M, i)){
+        sprintf(buffer,  "%d ",((process) i->datos)->pid);
+        snprintf(buffer, 40,"%s pr= %d %d",buffer, , getpriority(PRIO_PROCESS, (((process) i->datos)->pid)),((process)i->datos)->time);
+
+    }*/
+
+    return 0;
+}
+
+int deljobs(struct parametros p) {
+    return 0;
+}
+
+int job(struct parametros p) {
     return 0;
 }

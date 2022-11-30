@@ -420,3 +420,71 @@ ssize_t EscribirFichero(char *f, void *p, size_t cont, int overwrite) {
     close(df);
     return n;
 }
+void insertjob(pid_t pid,char *commandline,struct parametros p){
+    process P=malloc(sizeof(struct process));
+    time_t t = time(NULL);
+    struct tm T = *localtime(&t);
+    sprintf(P->time, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
+    P->pid=pid;
+    strcpy(P->commandline,commandline);
+    insert(p.J,P);
+}
+void execution(char** args,struct parametros p){
+    char*ENV[5];
+    char*ARG[5];
+    char FILE[15];
+    char commandline[100];
+    int prio= getpriority(PRIO_PROCESS,0)-1;
+    bool a=false;
+    int aux1=0,aux2=0,pid;
+    for(int i=0;args[i]!=NULL;i++){
+        if(args[i][0]>64&&args[i][0]<91){
+            ENV[aux1]=args[i];
+            ENV[aux1+1]=NULL;
+            aux1++;
+            continue;
+        }
+        else if(args[i][0]>96&&args[i][0]<123){
+            if(aux2==0){
+                strcpy(FILE,args[i]);
+                ARG[aux2]=args[i];
+                aux2++;
+                continue;
+            }
+            else{
+                ARG[aux2]=args[i];
+                ARG[aux2+1]=NULL;
+                aux2++;
+                continue;
+            }
+        }
+        else if(args[i][0]==64){
+            strtok(args[i],"@");
+            prio=atoi(strtok(args[i],"@"));
+            continue;
+        }
+        else if(args[i][0]==38){
+            a=true;
+            break;
+        }
+    }
+
+    if((pid=fork())==0){
+        execvpe(FILE,ARG,ENV);
+    }
+    else if(pid==-1){
+        perror("Error:");
+    }
+    else{
+        setpriority(PRIO_PROCESS,pid,prio);
+        strcpy(commandline,ARG[0]);
+        for(int i=1;ARG[i]!=NULL;i++){
+            strcat(commandline,ARG[i]);
+        }
+        insertjob(pid,commandline,p);
+        if(!a){
+            waitpid(pid,NULL,0);
+        }
+
+    }
+}

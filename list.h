@@ -22,6 +22,11 @@ typedef struct block{
     char mapfilename[30];
     int mapfiledesc;
 }*block;
+typedef struct process{
+    pid_t pid;
+    char time[80];
+    char commandline[100];
+}*process;
 
 struct node {
     void* datos;

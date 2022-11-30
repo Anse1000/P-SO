@@ -48,4 +48,6 @@ ssize_t LeerFichero (char *f, void *p, size_t cont);
 ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite);
 
 void opciones_memory(char **arg,unsigned int *aux);
+
+void execution(char **args);
 #endif //P0_SO_AUX_FUN_H
