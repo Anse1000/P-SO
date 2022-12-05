@@ -26,6 +26,9 @@ typedef struct process{
     pid_t pid;
     char time[80];
     char commandline[100];
+    int signalvalue;
+    char signal[15];
+    char user[20];
 }*process;
 
 struct node {

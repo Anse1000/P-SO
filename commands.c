@@ -4,6 +4,7 @@
 
 #include "commands.h"
 #include "aux-fun.h"
+
 extern char **environ;
 
 struct comando comandos[35] = {{"autores",    autores,    "autores [-n|-l] Muestra los nombres y logins de los autores\n"},
@@ -617,39 +618,35 @@ int showvar(struct parametros p) {
 }
 
 int changevar(struct parametros p) {
-    if(p.arg[1]==NULL||p.arg[2]==NULL||p.arg[3]==NULL){
+    if (p.arg[1] == NULL || p.arg[2] == NULL || p.arg[3] == NULL) {
         printf("Uso...  cambiarvar [-a|-e|-p] var valor\n");
-    }
-    else{
-        char* aux=malloc(strlen(p.arg[2])+strlen(p.arg[3])+2);
+    } else {
+        char *aux = malloc(strlen(p.arg[2]) + strlen(p.arg[3]) + 2);
         strcpy(aux, p.arg[2]);
         strcat(aux, "=");
-        if(strcmp("-a",p.arg[1])==0){
-            for(int i=0;p.E[i]!=NULL;i++){
-                if(strncmp(aux,p.E[i],strlen(aux))==0){
-                    strcat(aux,p.arg[3]);
-                    p.E[i]=aux;
+        if (strcmp("-a", p.arg[1]) == 0) {
+            for (int i = 0; p.E[i] != NULL; i++) {
+                if (strncmp(aux, p.E[i], strlen(aux)) == 0) {
+                    strcat(aux, p.arg[3]);
+                    p.E[i] = aux;
                     return 0;
                 }
             }
-        }
-        else if(strcmp("-e",p.arg[1])==0){
-            for(int i=0;p.E[i]!=NULL;i++){
-                if(strncmp(aux,p.E[i],strlen(aux))==0){
-                    strcat(aux,p.arg[3]);
-                    environ[i]=aux;
+        } else if (strcmp("-e", p.arg[1]) == 0) {
+            for (int i = 0; p.E[i] != NULL; i++) {
+                if (strncmp(aux, p.E[i], strlen(aux)) == 0) {
+                    strcat(aux, p.arg[3]);
+                    environ[i] = aux;
                     return 0;
                 }
             }
-        }
-        else if(strcmp("-p",p.arg[1])==0){
-            strcat(aux,p.arg[3]);
-            if(putenv(aux)!=0){
+        } else if (strcmp("-p", p.arg[1]) == 0) {
+            strcat(aux, p.arg[3]);
+            if (putenv(aux) != 0) {
                 perror("Error:");
             }
             return 0;
-        }
-        else{
+        } else {
             printf("Uso...  cambiarvar [-a|-e|-p] var valor\n");
             return -1;
         }
@@ -659,21 +656,18 @@ int changevar(struct parametros p) {
 }
 
 int showenv(struct parametros p) {
-    if(p.arg[1]==NULL){
+    if (p.arg[1] == NULL) {
         for (int i = 0; p.E[i] != NULL; i++) {
             printf("%p-> main arg3[%d]=(%p) %s\n", &p.E[i], i, p.E[i], p.E[i]);
         }
-    }
-    else if(strcmp(p.arg[1],"-environ")==0){
+    } else if (strcmp(p.arg[1], "-environ") == 0) {
         for (int i = 0; environ[i] != NULL; i++) {
             printf("%p-> environ[%d]=(%p) %s\n", &environ[i], i, environ[i], environ[i]);
         }
-    }
-    else if(strcmp(p.arg[1],"-addr")==0){
+    } else if (strcmp(p.arg[1], "-addr") == 0) {
         printf("main arg3:\n");
         printf("environ:\n");
-    }
-    else{
+    } else {
         printf("Uso... showenv [-environ|-address]\n");
     }
     return 0;
@@ -681,40 +675,36 @@ int showenv(struct parametros p) {
 
 int dofork() {
     int pid;
-    if((pid=fork())==0){
-        printf ("ejecutando proceso %d\n", getpid());
-    }
-    else if(pid==-1){
+    if ((pid = fork()) == 0) {
+        printf("ejecutando proceso %d\n", getpid());
+    } else if (pid == -1) {
         perror("Imposible crear proeso:");
-    }
-    else{
-        waitpid(pid,NULL,0);
+    } else {
+        waitpid(pid, NULL, 0);
     }
     return 0;
 }
 
 int execute(struct parametros p) {
     char *args[10];
-    if(p.arg[1]==NULL){
+    if (p.arg[1] == NULL) {
         printf("Seleccione un archivo...\n");
-    }
-    else{
-        for(int i=1;p.arg[i]!=NULL;i++){
-            args[i-1]=p.arg[i];
+    } else {
+        for (int i = 1; p.arg[i - 1] != NULL; i++) {
+            args[i - 1] = p.arg[i];
         }
-        execution(args);
+        execution(args, p, 0);
     }
     return 0;
 }
 
 int listjobs(struct parametros p) {
-    /*char buffer[800];
-    for (pos i = first(*p.M)->next; i != NULL; i = next(*p.M, i)){
-        sprintf(buffer,  "%d ",((process) i->datos)->pid);
-        snprintf(buffer, 40,"%s pr= %d %d",buffer, , getpriority(PRIO_PROCESS, (((process) i->datos)->pid)),((process)i->datos)->time);
-
-    }*/
-
+    for (pos i = first(*p.J)->next; i != NULL; i = next(*p.J, i)) {
+        actualizarSignal((process) i->datos);
+        printf("%d\t%s   pr=%d %s %s (%.3d) %s\n", ((process) i->datos)->pid, ((process) i->datos)->user,
+               getpriority(PRIO_PROCESS, (((process) i->datos)->pid)), ((process) i->datos)->time,
+               ((process) i->datos)->signal, ((process) i->datos)->signalvalue, ((process) i->datos)->commandline);
+    }
     return 0;
 }
 

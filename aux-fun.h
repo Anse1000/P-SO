@@ -5,6 +5,11 @@
 #ifndef P0_SO_AUX_FUN_H
 #define P0_SO_AUX_FUN_H
 #include "commands.h"
+struct SEN{
+    char *nombre;
+    int signal;
+}SEN;
+
 bool esnumero(char *s);
 
 int encontrar_archivo(char **a);
@@ -49,5 +54,7 @@ ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite);
 
 void opciones_memory(char **arg,unsigned int *aux);
 
-void execution(char **args);
+void execution(char **args,struct parametros p,int op);
+
+void actualizarSignal(struct process *job);
 #endif //P0_SO_AUX_FUN_H

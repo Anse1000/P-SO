@@ -51,7 +51,7 @@ void deleteList(List *L) {
     while (!isEmptyList(*L)) {
         p = *L;
         *L = (*L)->next;
-        if(aux){
+        if(aux==1){
             switch(((block)p->next->datos)->type){
                 case malloced:
                     free(((block)p->next->datos)->address);

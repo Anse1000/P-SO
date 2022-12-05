@@ -2,6 +2,7 @@
 #include <string.h>
 #include "list.h"
 #include "commands.h"
+#include "aux-fun.h"
 
 void addCommand(int N, char *C, List *L) {
     item I=malloc(sizeof(struct item));
@@ -36,7 +37,7 @@ int procesarEntrada(bool *terminado, char **trozos, List *H, int *N, List *M,Lis
                 return comandos[i].funcion(p);
             }
         }
-        execution(trozos);
+        execution(trozos,p,1);
         return 0;
     }
 }

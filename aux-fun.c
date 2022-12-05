@@ -2,6 +2,7 @@
 // Created by pablo on 29/10/2022.
 //
 #include "commands.h"
+#include "aux-fun.h"
 
 bool esnumero(char *s) {
     if (s[0] == 45) {
@@ -82,12 +83,12 @@ insertMemoria(List *M, unsigned long size, void *address, enum types type, ...) 
     B->address = address;
     sprintf(B->time, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
     B->size = size;
-    if(type== shared){
+    if (type == shared) {
         B->sharedkey = va_arg(argptr, int);
     }
     if (type == mapped) {
-        char* aux=va_arg(argptr, char*);
-        strcpy(B->mapfilename,aux);
+        char *aux = va_arg(argptr, char*);
+        strcpy(B->mapfilename, aux);
         B->mapfiledesc = va_arg(argptr, int);
     }
     insert(M, B);
@@ -298,7 +299,7 @@ char *enum_str(enum types t) {
 }
 
 void imprimirmem(List M, enum types t) {
-    char buffer[800], key[40],file[70];
+    char buffer[800], key[40], file[70];
     printf("***Lista de bloques asignados %s para el proceso %d\n", enum_str(t), getpid());
     for (pos i = first(M)->next; i != NULL; i = next(M, i)) {
         if (t != all) {
@@ -308,9 +309,10 @@ void imprimirmem(List M, enum types t) {
                 if (((block) i->datos)->type == shared) {
                     snprintf(key, 40, " (key %d) \n", ((block) i->datos)->sharedkey);
                     strcat(buffer, key);
-                }else if(((block) i->datos)->type == mapped){
-                    snprintf(file,70," %s (file descriptor %d) \n",((block)i->datos)->mapfilename,((block)i->datos)->mapfiledesc);
-                    strcat(buffer,file);
+                } else if (((block) i->datos)->type == mapped) {
+                    snprintf(file, 70, " %s (file descriptor %d) \n", ((block) i->datos)->mapfilename,
+                             ((block) i->datos)->mapfiledesc);
+                    strcat(buffer, file);
                 } else {
                     strcat(buffer, "\n");
                 }
@@ -321,10 +323,11 @@ void imprimirmem(List M, enum types t) {
             if (((block) i->datos)->type == shared) {
                 snprintf(key, 40, " (key %d) \n", ((block) i->datos)->sharedkey);
                 strcat(buffer, key);
-            }else if(((block) i->datos)->type == mapped){
-                snprintf(file,70," %s (file descriptor %d) \n",((block)i->datos)->mapfilename,((block)i->datos)->mapfiledesc);
-                strcat(buffer,file);
-            }else {
+            } else if (((block) i->datos)->type == mapped) {
+                snprintf(file, 70, " %s (file descriptor %d) \n", ((block) i->datos)->mapfilename,
+                         ((block) i->datos)->mapfiledesc);
+                strcat(buffer, file);
+            } else {
                 strcat(buffer, "\n");
             }
 
@@ -420,71 +423,179 @@ ssize_t EscribirFichero(char *f, void *p, size_t cont, int overwrite) {
     close(df);
     return n;
 }
-void insertjob(pid_t pid,char *commandline,struct parametros p){
-    process P=malloc(sizeof(struct process));
+
+void insertjob(pid_t pid, char *commandline, List *L) {
+    process P = malloc(sizeof(struct process));
     time_t t = time(NULL);
     struct tm T = *localtime(&t);
     sprintf(P->time, "%d/%d/%d-%d:%02d\t", T.tm_year + 1900, T.tm_mon + 1, T.tm_mday, T.tm_hour, T.tm_min);
-    P->pid=pid;
-    strcpy(P->commandline,commandline);
-    insert(p.J,P);
+    P->pid = pid;
+    struct passwd p = *getpwuid(getuid());
+    strcpy(P->user, p.pw_name);
+    strcpy(P->signal, "ACTIVO");
+    strcpy(P->commandline, commandline);
+    insert(L, P);
+    free(P);
 }
-void execution(char** args,struct parametros p){
-    char*ENV[5];
-    char*ARG[5];
+
+void execution(char **args, struct parametros p, int op) {
+    char *ENV[5];
+    char *ARG[5];
     char FILE[15];
     char commandline[100];
-    int prio= getpriority(PRIO_PROCESS,0)-1;
-    bool a=false;
-    int aux1=0,aux2=0,pid;
-    for(int i=0;args[i]!=NULL;i++){
-        if(args[i][0]>64&&args[i][0]<91){
-            ENV[aux1]=args[i];
-            ENV[aux1+1]=NULL;
+    char aux[50];
+    int prio = getpriority(PRIO_PROCESS, 0) - 1;
+    bool a = false;
+    int aux1 = 0, aux2 = 0, pid;
+    for (int i = 0; args[i] != NULL; i++) {
+        if (args[i][0] > 64 && args[i][0] < 91) {
+            sprintf(aux, "%s=%s", args[i], getenv(args[i]));
+            ENV[aux1]=strndup(aux,50);
             aux1++;
             continue;
-        }
-        else if(args[i][0]>96&&args[i][0]<123){
-            if(aux2==0){
-                strcpy(FILE,args[i]);
-                ARG[aux2]=args[i];
+        } else if ((args[i][0] > 96 && args[i][0] < 123) || args[i][0] == 45 || args[i][0] > 47 && args[i][0] < 59) {
+            if (aux2 == 0) {
+                strcpy(FILE, args[i]);
+                ARG[aux2] = args[i];
+                aux2++;
+                continue;
+            } else {
+                ARG[aux2] = args[i];
                 aux2++;
                 continue;
             }
-            else{
-                ARG[aux2]=args[i];
-                ARG[aux2+1]=NULL;
-                aux2++;
-                continue;
-            }
-        }
-        else if(args[i][0]==64){
-            strtok(args[i],"@");
-            prio=atoi(strtok(args[i],"@"));
+        } else if (args[i][0] == 64) {
+            strtok(args[i], "@");
+            prio = atoi(strtok(args[i], "@"));
             continue;
-        }
-        else if(args[i][0]==38){
-            a=true;
+        } else if (args[i][0] == 38 && op) {
+            a = true;
             break;
         }
     }
-
-    if((pid=fork())==0){
-        execvpe(FILE,ARG,ENV);
-    }
-    else if(pid==-1){
+    ENV[aux1] = NULL;
+    ARG[aux2] = NULL;
+    if ((pid = fork()) == 0) {
+        execvpe(FILE, ARG, ENV);
+    } else if (pid == -1) {
         perror("Error:");
+    } else {
+        setpriority(PRIO_PROCESS, pid, prio);
+        if (!a) {
+            waitpid(pid, NULL, 0);
+            return;
+        }
+        strcpy(commandline, ARG[0]);
+        for (int i = 1; ARG[i] != NULL; i++) {
+            strcat(commandline, " ");
+            strcat(commandline, ARG[i]);
+        }
+        insertjob(pid, commandline, p.J);
     }
-    else{
-        setpriority(PRIO_PROCESS,pid,prio);
-        strcpy(commandline,ARG[0]);
-        for(int i=1;ARG[i]!=NULL;i++){
-            strcat(commandline,ARG[i]);
-        }
-        insertjob(pid,commandline,p);
-        if(!a){
-            waitpid(pid,NULL,0);
-        }
+}
 
+struct SEN sigstrnum[] = {
+        {"HUP", SIGHUP},
+        {"INT", SIGINT},
+        {"QUIT", SIGQUIT},
+        {"ILL", SIGILL},
+        {"TRAP", SIGTRAP},
+        {"ABRT", SIGABRT},
+        {"IOT", SIGIOT},
+        {"BUS", SIGBUS},
+        {"FPE", SIGFPE},
+        {"KILL", SIGKILL},
+        {"USR1", SIGUSR1},
+        {"SEGV", SIGSEGV},
+        {"USR2", SIGUSR2},
+        {"PIPE", SIGPIPE},
+        {"ALRM", SIGALRM},
+        {"TERM", SIGTERM},
+        {"CHLD", SIGCHLD},
+        {"CONT", SIGCONT},
+        {"STOP", SIGSTOP},
+        {"TSTP", SIGTSTP},
+        {"TTIN", SIGTTIN},
+        {"TTOU", SIGTTOU},
+        {"URG", SIGURG},
+        {"XCPU", SIGXCPU},
+        {"XFSZ", SIGXFSZ},
+        {"VTALRM", SIGVTALRM},
+        {"PROF", SIGPROF},
+        {"WINCH", SIGWINCH},
+        {"IO", SIGIO},
+        {"SYS", SIGSYS},
+        {"POLL", SIGPOLL},
+        {"PWR", SIGPWR},
+        {"STKFLT", SIGSTKFLT},
+        {"CLD", SIGCLD},
+#ifdef SIGEMT
+        {"EMT", SIGEMT},
+#endif
+#ifdef SIGINFO
+        {"INFO", SIGINFO},
+#endif
+#ifdef SIGLOST
+        {"LOST", SIGLOST},
+#endif
+#ifdef SIGCANCEL
+        {"CANCEL", SIGCANCEL},
+#endif
+#ifdef SIGTHAW
+        {"THAW", SIGTHAW},
+#endif
+#ifdef SIGFREEZE
+        {"FREEZE", SIGFREEZE},
+#endif
+#ifdef SIGLWP
+        {"LWP", SIGLWP},
+#endif
+#ifdef SIGWAITING
+        {"WAITING", SIGWAITING},
+#endif
+        {NULL, -1}
+};
+
+int ValorSenal(char *sen) {
+    int i;
+    for (i = 0; sigstrnum[i].nombre != NULL; i++)
+        if (!strcmp(sen, sigstrnum[i].nombre))
+            return sigstrnum[i].signal;
+    return -1;
+}
+
+
+char *NombreSenal(int sen) {
+    int i;
+    for (i = 0; sigstrnum[i].nombre != NULL; i++)
+        if (sen == sigstrnum[i].signal)
+            return sigstrnum[i].nombre;
+    return ("SIGUNKNOWN");
+}
+
+void actualizarSignal(struct process *job) {
+    int wstatus;
+    int signal;
+    int aux;
+    if (strcmp(job->signal, "TERMINADO") == 0) {
+        return;
     }
+    if ((aux = waitpid(job->pid, &wstatus, WNOHANG | WCONTINUED | WUNTRACED)) == -1) {
+        perror("Error");
+    } else if (aux != 0) {
+        if (WIFEXITED(wstatus)) {
+            signal = WEXITSTATUS(wstatus);
+            if (!signal) {
+                job->signalvalue = signal;
+                strcpy(job->signal, "TERMINADO");
+                return;
+            }
+        } else if (WIFSIGNALED(wstatus)) { signal = WTERMSIG(wstatus); }
+        else if (WIFSTOPPED(wstatus)) { signal = WSTOPSIG(wstatus); }
+    } else {
+        return;
+    }
+
+    job->signalvalue = signal;
+    strcpy(job->signal, NombreSenal(signal));
 }
