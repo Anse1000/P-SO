@@ -434,6 +434,8 @@ void insertjob(pid_t pid, char *commandline, List *L) {
     strcpy(P->user, p.pw_name);
     strcpy(P->signal, "ACTIVO");
     strcpy(P->commandline, commandline);
+    P->signalvalue=0;
+    P->status=1;
     insert(L, P);
     free(P);
 }
@@ -444,13 +446,13 @@ void execution(char **args, struct parametros p, int op) {
     char FILE[15];
     char commandline[100];
     char aux[50];
-    int prio = getpriority(PRIO_PROCESS, 0) - 1;
+    int prio = -1;
     bool a = false;
     int aux1 = 0, aux2 = 0, pid;
     for (int i = 0; args[i] != NULL; i++) {
         if (args[i][0] > 64 && args[i][0] < 91) {
             sprintf(aux, "%s=%s", args[i], getenv(args[i]));
-            ENV[aux1]=strndup(aux,50);
+            ENV[aux1]= strdup(aux);
             aux1++;
             continue;
         } else if ((args[i][0] > 96 && args[i][0] < 123) || args[i][0] == 45 || args[i][0] > 47 && args[i][0] < 59) {
@@ -475,12 +477,17 @@ void execution(char **args, struct parametros p, int op) {
     }
     ENV[aux1] = NULL;
     ARG[aux2] = NULL;
+    nice(prio);
     if ((pid = fork()) == 0) {
-        execvpe(FILE, ARG, ENV);
+        if(ENV[0]==NULL){
+            execvp(FILE,ARG);
+        }
+        else{
+            execvpe(FILE, ARG, ENV);
+        }
     } else if (pid == -1) {
         perror("Error:");
     } else {
-        setpriority(PRIO_PROCESS, pid, prio);
         if (!a) {
             waitpid(pid, NULL, 0);
             return;
@@ -491,6 +498,9 @@ void execution(char **args, struct parametros p, int op) {
             strcat(commandline, ARG[i]);
         }
         insertjob(pid, commandline, p.J);
+        for(int i=0;i<aux1;i++){
+            free(ENV[i]);
+        }
     }
 }
 
@@ -577,7 +587,7 @@ void actualizarSignal(struct process *job) {
     int wstatus;
     int signal;
     int aux;
-    if (strcmp(job->signal, "TERMINADO") == 0) {
+    if (job->status==0||job->status==2) {
         return;
     }
     if ((aux = waitpid(job->pid, &wstatus, WNOHANG | WCONTINUED | WUNTRACED)) == -1) {
@@ -588,14 +598,18 @@ void actualizarSignal(struct process *job) {
             if (!signal) {
                 job->signalvalue = signal;
                 strcpy(job->signal, "TERMINADO");
+                job->status=0;
                 return;
             }
-        } else if (WIFSIGNALED(wstatus)) { signal = WTERMSIG(wstatus); }
+        } else if (WIFSIGNALED(wstatus)) {
+            signal = WTERMSIG(wstatus);
+        }
         else if (WIFSTOPPED(wstatus)) { signal = WSTOPSIG(wstatus); }
     } else {
         return;
     }
-
+    job->status=2;
     job->signalvalue = signal;
     strcpy(job->signal, NombreSenal(signal));
+
 }

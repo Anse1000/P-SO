@@ -5,7 +5,7 @@
 #include "commands.h"
 #include "aux-fun.h"
 
-extern char **environ;
+
 
 struct comando comandos[35] = {{"autores",    autores,    "autores [-n|-l] Muestra los nombres y logins de los autores\n"},
                                {"pid",        pid,        "pid [-p]        Muestra el pid del shell o de su proceso padre\n"},
@@ -709,9 +709,47 @@ int listjobs(struct parametros p) {
 }
 
 int deljobs(struct parametros p) {
+    int tipo=-1;
+    if(p.arg[1]==NULL){
+        for (pos i = first(*p.J)->next; i != NULL; i = next(*p.J, i)) {
+            actualizarSignal((process) i->datos);
+            printf("%d\t%s   pr=%d %s %s (%.3d) %s\n", ((process) i->datos)->pid, ((process) i->datos)->user,
+                   getpriority(PRIO_PROCESS, (((process) i->datos)->pid)), ((process) i->datos)->time,
+                   ((process) i->datos)->signal, ((process) i->datos)->signalvalue, ((process) i->datos)->commandline);
+        }
+        return 0;
+    }
+    else if(strcmp("-term",p.arg[1])==0){tipo=0;}
+    else if(strcmp("-sig",p.arg[1])==0){tipo=2;}
+    if(tipo==-1){return -1;}
+    for(pos i = first(*p.J)->next; i != NULL; i = next(*p.J, i)){
+        actualizarSignal((process) i->datos);
+        if(((process)i->datos)->status==tipo){
+            deleteelem(i,p.M);
+        }
+    }
     return 0;
 }
 
 int job(struct parametros p) {
+    int wstatus;
+    if(strcmp("-fg",p.arg[1])==0){
+        waitpid(strtol(p.arg[2],NULL,0),&wstatus,0);
+        if(==0){
+            printf("Proceso %d terminado correctamente, valor devuelto %d\n",(int)strtol(p.arg[2],NULL,0),aux);
+        }
+    }
+    else{
+        int pid=strtol(p.arg[1],NULL,10);
+        for(pos i = first(*p.J)->next; i != NULL; i = next(*p.J, i)){
+            actualizarSignal((process) i->datos);
+            if(pid==((process)i->datos)->pid){
+                printf("%d\t%s   pr=%d %s %s (%.3d) %s\n", ((process) i->datos)->pid, ((process) i->datos)->user,
+                       getpriority(PRIO_PROCESS, (((process) i->datos)->pid)), ((process) i->datos)->time,
+                       ((process) i->datos)->signal, ((process) i->datos)->signalvalue, ((process) i->datos)->commandline);
+                break;
+            }
+        }
+    }
     return 0;
 }

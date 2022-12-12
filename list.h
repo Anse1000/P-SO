@@ -29,6 +29,7 @@ typedef struct process{
     int signalvalue;
     char signal[15];
     char user[20];
+    int status;
 }*process;
 
 struct node {
