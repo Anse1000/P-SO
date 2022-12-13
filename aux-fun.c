@@ -566,15 +566,6 @@ struct SEN sigstrnum[] = {
         {NULL, -1}
 };
 
-int ValorSenal(char *sen) {
-    int i;
-    for (i = 0; sigstrnum[i].nombre != NULL; i++)
-        if (!strcmp(sen, sigstrnum[i].nombre))
-            return sigstrnum[i].signal;
-    return -1;
-}
-
-
 char *NombreSenal(int sen) {
     int i;
     for (i = 0; sigstrnum[i].nombre != NULL; i++)

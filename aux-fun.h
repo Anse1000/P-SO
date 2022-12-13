@@ -57,4 +57,6 @@ void opciones_memory(char **arg,unsigned int *aux);
 void execution(char **args,struct parametros p,int op);
 
 void actualizarSignal(struct process *job);
+
+char *NombreSenal(int sen);
 #endif //P0_SO_AUX_FUN_H

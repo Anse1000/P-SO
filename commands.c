@@ -734,13 +734,17 @@ int deljobs(struct parametros p) {
 int job(struct parametros p) {
     int wstatus;
     if(strcmp("-fg",p.arg[1])==0){
-        waitpid(strtol(p.arg[2],NULL,0),&wstatus,0);
-        if(==0){
-            printf("Proceso %d terminado correctamente, valor devuelto %d\n",(int)strtol(p.arg[2],NULL,0),aux);
+        waitpid((int)strtol(p.arg[2],NULL,0),&wstatus,0);
+        if(WIFEXITED(wstatus)){
+            printf("Proceso %d terminado correctamente, valor devuelto %d\n",(int)strtol(p.arg[2],NULL,0), WEXITSTATUS(wstatus));
+        }
+        else if(WIFSIGNALED(wstatus)){
+            printf("Proceso %d terminado mediante senal, valor %s (%.3d)",(int)strtol(p.arg[2],NULL,0), NombreSenal(
+                    WTERMSIG(wstatus)), WTERMSIG(wstatus));
         }
     }
     else{
-        int pid=strtol(p.arg[1],NULL,10);
+        int pid=(int)strtol(p.arg[1],NULL,10);
         for(pos i = first(*p.J)->next; i != NULL; i = next(*p.J, i)){
             actualizarSignal((process) i->datos);
             if(pid==((process)i->datos)->pid){
