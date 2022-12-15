@@ -665,8 +665,10 @@ int showenv(struct parametros p) {
             printf("%p-> environ[%d]=(%p) %s\n", &environ[i], i, environ[i], environ[i]);
         }
     } else if (strcmp(p.arg[1], "-addr") == 0) {
-        printf("main arg3:\n");
-        printf("environ:\n");
+        char*aux;
+        sscanf(p.arg[2],"%p",&aux);
+        printf("main arg3: %s (almacenado en %p)\n",p.arg[2],&aux);
+        printf("  environ: %s (almacenado en %p) \n",p.arg[2],aux);
     } else {
         printf("Uso... showenv [-environ|-address]\n");
     }
