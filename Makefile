@@ -12,7 +12,7 @@ commands.o: commands.c
 aux-fun.o: aux-fun.c
 	@gcc -c aux-fun.c
 p2:	main.o list.o commands.o aux-fun.o
-	@gcc -Wall -o p2 main.o list.o commands.o aux-fun.o
+	@gcc -Wall -o p3 main.o list.o commands.o aux-fun.o
 	@echo Compilado correcto
 clean:
 	@rm *.o

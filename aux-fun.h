@@ -8,7 +8,7 @@
 struct SEN{
     char *nombre;
     int signal;
-}SEN;
+};
 
 bool esnumero(char *s);
 
