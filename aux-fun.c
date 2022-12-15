@@ -498,7 +498,7 @@ void execution(char **args, struct parametros p, int op) {
             strcat(commandline, ARG[i]);
         }
         insertjob(pid, commandline, p.J);
-        for(int i=0;i<aux1;i++){
+        for(int i=0;i<=aux1;i++){
             free(ENV[i]);
         }
     }

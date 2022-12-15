@@ -735,7 +735,10 @@ int deljobs(struct parametros p) {
 
 int job(struct parametros p) {
     int wstatus;
-    if(strcmp("-fg",p.arg[1])==0){
+    if(p.arg[1]==NULL){
+        return -1;
+    }
+    else if(strcmp("-fg",p.arg[1])==0){
         waitpid((int)strtol(p.arg[2],NULL,0),&wstatus,0);
         if(WIFEXITED(wstatus)){
             printf("Proceso %d terminado correctamente, valor devuelto %d\n",(int)strtol(p.arg[2],NULL,0), WEXITSTATUS(wstatus));
@@ -746,6 +749,9 @@ int job(struct parametros p) {
         }
     }
     else{
+        if(p.arg[2]==NULL){
+            printf("Introduzca un pid...\n");
+        }
         int pid=(int)strtol(p.arg[1],NULL,10);
         for(pos i = first(*p.J)->next; i != NULL; i = next(*p.J, i)){
             actualizarSignal((process) i->datos);
